@@ -194,12 +194,15 @@ If RenewHelper helps you, consider buying the author a coffee ☕️. Your suppo
 
 **Crypto** - International
 
-- **USDT (TRC20)**: `(Your TRC20 Address)`
-- **ETH (ERC20)**: `(Your ETH Address)`
+| Crypto | Network | Address (Click to Copy) |
+| :--- | :--- | :--- |
+| **USDT** | **BSC (BEP20)** / Polygon / ETH | `0x0de4d19673cbdf954cfb83c0a48abb5ce8f6bf58` |
+
+> ⚠️ Warning：Support USDT on BSC (BEP20), ETH or Polygon networks (Low fees).，DO NOT USE TRC20 ！！！
 
 **Aifadian** - CN Users
 
-- https://aifadian.com/a/
+[![爱发电](https://img.shields.io/badge/爱发电-Aifadian-946ce6?style=for-the-badge&logo=github&logoColor=white)](https://aifadian.com/a/lostfree)
 
 ---
 
