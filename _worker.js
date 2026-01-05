@@ -2271,11 +2271,14 @@ const HTML = `<!DOCTYPE html>
 					</div>
 
                     <h4 class="text-xs font-bold text-blue-600 mb-4 mt-8 border-b border-gray-300 pb-2 uppercase">{{ t('secData') }}</h4>
-                    <div class="flex gap-4">
+                    <div class="flex gap-4 mb-4">
                         <el-button type="success" plain :icon="Download" class="flex-1 mecha-btn" @click="exportData">{{ t('btnExport') }}</el-button>
                         <el-button type="warning" plain :icon="Upload" class="flex-1 mecha-btn" @click="triggerImport">{{ t('btnImport') }}</el-button>
                         <input type="file" ref="importRef" style="display:none" accept=".json" @change="handleImportFile">
                     </div>
+                    <el-button type="info" plain class="w-full mecha-btn" @click="migrateOldData">
+                        {{ lang === 'zh' ? '升级旧数据 (生成初始账单)' : 'Migrate Old Data (Generate Initial Bills)' }}
+                    </el-button>
                 </el-form>
                 <template #footer><el-button @click="settingsVisible=false" size="large" class="mecha-btn">{{ t('cancel') }}</el-button><el-button type="primary" @click="saveSettings" size="large" class="mecha-btn !bg-blue-600">{{ t('saveSettings') }}</el-button></template>
             </el-dialog>
@@ -2316,15 +2319,18 @@ const HTML = `<!DOCTYPE html>
             <!-- History Dialog -->
 <el-dialog v-model="historyDialogVisible" :title="currentHistoryItem.name + ' - ' + t('historyTitle')" width="700px" align-center class="mecha-panel !rounded-none" style="clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);">
                 <div class="mb-6 bg-slate-50 dark:bg-slate-800 p-4 rounded border border-slate-100 dark:border-slate-700 relative flex items-center justify-between">
-                     <div class="flex items-center gap-8">
-                         <div class="flex items-center gap-3">
+                     <div class="flex items-center gap-6 flex-wrap">
+                         <div class="flex items-center gap-2">
                              <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{{t('totalCost')}}</div> 
-                             <div class="font-black text-2xl font-mono text-blue-600 dark:text-blue-400 leading-none">{{historyStats.total}} <span class="text-xs text-gray-400 font-bold align-top ml-0.5">{{historyStats.currency}}</span></div>
+                             <div class="font-black text-xl font-mono text-blue-600 dark:text-blue-400 leading-none">{{historyStats.convertedTotal}} <span class="text-xs text-gray-400 font-bold">{{historyStats.preferredCurrency}}</span></div>
                          </div>
-                         <div class="w-px h-8 bg-slate-200 dark:bg-slate-700"></div>
-                         <div class="flex items-center gap-3">
+                         <div v-if="Object.keys(historyStats.byCurrency).length > 1" class="flex items-center gap-2 flex-wrap">
+                             <span v-for="(amount, cur) in historyStats.byCurrency" :key="cur" class="text-xs font-mono text-gray-500 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">{{amount.toFixed(2)}} {{cur}}</span>
+                         </div>
+                         <div class="w-px h-6 bg-slate-200 dark:bg-slate-700"></div>
+                         <div class="flex items-center gap-2">
                              <div class="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{{t('totalCount')}}</div> 
-                             <div class="font-black text-2xl font-mono text-amber-500 leading-none">{{historyStats.count}}</div>
+                             <div class="font-black text-xl font-mono text-amber-500 leading-none">{{historyStats.count}}</div>
                          </div>
                      </div>
                      <el-tooltip :content="t('btnAddHist')" placement="left">
@@ -2380,8 +2386,13 @@ const HTML = `<!DOCTYPE html>
                                             <el-date-picker v-model="tempHistoryItem.renewDate" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" size="small" style="width:100%" :clearable="false"></el-date-picker>
                                         </div>
                                         <div>
-                                            <div class="text-[10px] text-blue-500 font-bold mb-1">{{ t('amount') }} ({{ tempHistoryItem.currency }})</div>
-                                            <el-input-number v-model="tempHistoryItem.price" :min="0" :precision="2" :controls="false" size="small" style="width:100%" class="!w-full"></el-input-number>
+                                            <div class="text-[10px] text-blue-500 font-bold mb-1">{{ t('amount') }}</div>
+                                            <div class="flex gap-2">
+                                                <el-input-number v-model="tempHistoryItem.price" :min="0" :precision="2" :controls="false" size="small" style="flex:1"></el-input-number>
+                                                <el-select v-model="tempHistoryItem.currency" size="small" style="width:80px">
+                                                    <el-option v-for="c in currencyList" :key="c" :label="c" :value="c"></el-option>
+                                                </el-select>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="mb-3 opacity-60">
@@ -2771,6 +2782,50 @@ const HTML = `<!DOCTYPE html>
                     if(form.value.lastRenewDate < form.value.createDate) return ElMessage.error(t('msg.dateError'));
                     if(form.value.lastRenewDate > getLocalToday()) return ElMessage.error(t('msg.futureError'));
                     
+// 新建时自动创建初始账单记录
+                    if (!isEdit.value && form.value.lastRenewDate && form.value.intervalDays) {
+                        const startDate = form.value.lastRenewDate;
+                        let endDate = startDate;
+                        
+                        // 计算 endDate = startDate + intervalDays (往后推算)
+                        if (form.value.useLunar && typeof LUNAR !== 'undefined' && typeof frontendCalc !== 'undefined') {
+                            // 【修复】农历逻辑：先转为农历对象 -> 计算 -> 转回公历
+                            const d = parseYMD(startDate); // 字符串转 Date
+                            const l = LUNAR.solar2lunar(d.getFullYear(), d.getMonth() + 1, d.getDate());
+                            
+                            if (l) {
+                                const nextL = frontendCalc.addPeriod(l, Number(form.value.intervalDays), form.value.cycleUnit || 'day');
+                                const nextS = frontendCalc.l2s(nextL);
+                                endDate = \`\${nextS.year}-\${nextS.month.toString().padStart(2, '0')}-\${nextS.day.toString().padStart(2, '0')}\`;
+                            }
+                        } else {
+                            // 公历：普通日期计算
+                            const start = new Date(startDate);
+                            const unit = form.value.cycleUnit || 'day';
+                            const interval = Number(form.value.intervalDays) || 1;
+                            if (unit === 'year') start.setFullYear(start.getFullYear() + interval);
+                            else if (unit === 'month') start.setMonth(start.getMonth() + interval);
+                            else start.setDate(start.getDate() + interval);
+                            const y = start.getFullYear();
+                            const m = (start.getMonth() + 1).toString().padStart(2, '0');
+                            const d = start.getDate().toString().padStart(2, '0');
+                            endDate = y + '-' + m + '-' + d;
+                        }
+                        
+                        // 使用当前时间作为操作时间，或者直接用 startDate 补全时间
+                        const now = new Date();
+                        const renewDate = now.getFullYear() + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + '-' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+                        
+                        form.value.renewHistory = [{
+                            renewDate: renewDate,
+                            startDate: startDate,
+                            endDate: endDate,
+                            price: form.value.fixedPrice || 0,
+                            currency: form.value.currency || settings.value.defaultCurrency || 'CNY',
+                            note: lang.value === 'zh' ? '自动初始账单' : 'Auto Initial'
+                        }];
+                    }
+                    
                     let newList=[...list.value];
                     if(isEdit.value) { const i=newList.findIndex(x=>x.id===form.value.id); if(i!==-1) newList[i]=form.value; }
                     else newList.push(form.value);
@@ -2902,6 +2957,73 @@ const HTML = `<!DOCTYPE html>
                     } catch {}
                 };
 
+                // 迁移旧数据：为没有续费记录的项目生成初始账单
+                const migrateOldData = async () => {
+                    try {
+                        await ElMessageBox.confirm(
+                            lang.value === 'zh' 
+                                ? '此操作将为所有没有续费记录的项目生成初始账单，是否继续？' 
+                                : 'This will generate initial bills for all items without history. Continue?',
+                            lang.value === 'zh' ? '数据迁移' : 'Data Migration',
+                            { type: 'info', confirmButtonText: t('yes'), cancelButtonText: t('no') }
+                        );
+                        
+                        let count = 0;
+                        const now = new Date();
+                        const renewDate = now.getFullYear() + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + '-' + now.getDate().toString().padStart(2, '0') + ' ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+                        
+                        list.value.forEach(item => {
+                            if ((!item.renewHistory || item.renewHistory.length === 0) && item.lastRenewDate && item.intervalDays) {
+                                const startDate = item.lastRenewDate;
+                                let endDate = startDate;
+                                
+                                // 计算 endDate = startDate + interval（支持农历和公历）
+                                if (item.useLunar && typeof LUNAR !== 'undefined' && typeof frontendCalc !== 'undefined') {
+                                    // 【修复】农历逻辑：先转为农历对象 -> 计算 -> 转回公历
+                                    const d = parseYMD(startDate);
+                                    const l = LUNAR.solar2lunar(d.getFullYear(), d.getMonth() + 1, d.getDate());
+                                    
+                                    if (l) {
+                                        const nextL = frontendCalc.addPeriod(l, Number(item.intervalDays), item.cycleUnit || 'day');
+                                        const nextS = frontendCalc.l2s(nextL);
+                                        endDate = \`\${nextS.year}-\${nextS.month.toString().padStart(2, '0')}-\${nextS.day.toString().padStart(2, '0')}\`;
+                                    }
+                                } else {
+                                    // 公历：普通日期计算
+                                    const start = new Date(startDate);
+                                    const unit = item.cycleUnit || 'day';
+                                    const interval = Number(item.intervalDays) || 1;
+                                    if (unit === 'year') start.setFullYear(start.getFullYear() + interval);
+                                    else if (unit === 'month') start.setMonth(start.getMonth() + interval);
+                                    else start.setDate(start.getDate() + interval);
+                                    const y = start.getFullYear();
+                                    const m = (start.getMonth() + 1).toString().padStart(2, '0');
+                                    const d = start.getDate().toString().padStart(2, '0');
+                                    endDate = y + '-' + m + '-' + d;
+                                }
+                                
+                                item.renewHistory = [{
+                                    renewDate: renewDate,
+                                    startDate: startDate,
+                                    endDate: endDate,
+                                    price: item.fixedPrice || 0,
+                                    currency: item.currency || settings.value.defaultCurrency || 'CNY',
+                                    note: lang.value === 'zh' ? '自动初始账单' : 'Auto Initial'
+                                }];
+                                count++;
+                            }
+                        });
+                        
+                        if (count > 0) {
+                            await saveData(null, null, false);
+                            tableKey.value++;
+                            ElMessage.success(lang.value === 'zh' ? '已为 ' + count + ' 个项目生成初始账单' : 'Generated initial bills for ' + count + ' items');
+                        } else {
+                            ElMessage.info(lang.value === 'zh' ? '没有需要迁移的项目' : 'No items need migration');
+                        }
+                    } catch {}
+                };
+
                 const clearLogs = async () => { await fetch('/api/logs/clear',{method:'POST',headers:getAuth()}); historyLogs.value=[]; ElMessage.success(t('msg.cleared')); };
                 const openHistoryLogs = async () => { historyVisible.value=true; historyLoading.value=true; try { historyLogs.value=(await(await fetch('/api/logs',{headers:getAuth()})).json()).data; } finally { historyLoading.value=false; } };
 
@@ -2966,7 +3088,7 @@ const HTML = `<!DOCTYPE html>
                     { label: 'Australia/Sydney (澳大利亚悉尼)', value: 'Australia/Sydney' },
                     { label: 'Pacific/Auckland (新西兰奥克兰)', value: 'Pacific/Auckland' }
                 ];
-                const currencyList = ['CNY', 'USD', 'EUR', 'GBP', 'HKD', 'JPY', 'TWD', 'SGD', 'MYR', 'KRW'];
+                const currencyList = ['CNY', 'USD', 'EUR', 'GBP', 'HKD', 'JPY', 'SGD', 'MYR', 'KRW'];
 
                 // --- Bill Management Logic ---
                 const renewDialogVisible = ref(false);
@@ -2996,7 +3118,23 @@ const HTML = `<!DOCTYPE html>
                 // 监听弹窗关闭，重置编辑状态
                 watch(historyDialogVisible, (val) => {
                     if (!val) cancelEditHistory();
-                });
+                });                // --- Currency Exchange Rates ---
+                const exchangeRates = ref({});
+                const ratesLoading = ref(false);
+
+                const fetchExchangeRates = async (baseCurrency) => {
+                    if (!baseCurrency) baseCurrency = 'CNY';
+                    ratesLoading.value = true;
+                    try {
+                        const res = await fetch('https://api.frankfurter.dev/v1/latest?base=' + baseCurrency);
+                        if (res.ok) {
+                            const data = await res.json();
+                            exchangeRates.value = { ...data.rates, [baseCurrency]: 1 };
+                        }
+                    } catch (e) { console.error('Failed to fetch exchange rates:', e); }
+                    ratesLoading.value = false;
+                };
+
                 const openRenew = (row) => {
                     // Helper: 格式化日期 (YYYY-MM-DD)
                     const formatDate = (d) => \`\${d.getFullYear()}-\${(d.getMonth() + 1).toString().padStart(2, '0')}-\${d.getDate().toString().padStart(2, '0')}\`;
@@ -3144,6 +3282,8 @@ const HTML = `<!DOCTYPE html>
                     historyPage.value = 1;
                     historyDialogVisible.value = true;
                     editingHistoryIndex.value = -1;
+                    // Fetch exchange rates for currency conversion
+                    fetchExchangeRates(settings.value.defaultCurrency || 'CNY');
                 };
 
                 const startEditHistory = (index, item) => {
@@ -3277,11 +3417,39 @@ const HTML = `<!DOCTYPE html>
                 const historyStats = computed(() => {
                     const hist = currentHistoryItem.value.renewHistory || [];
                     const count = hist.length;
-                    // Simple total (ignoring currency mix for now, or just summing numbers)
-                    // Ideal: group by currency. 
-                    const total = hist.reduce((acc, cur) => acc + (Number(cur.price)||0), 0);
-                    const currency = currentHistoryItem.value.currency || 'CNY'; // Use item currency for label
-                    return { count, total: total.toFixed(2), currency };
+                    const preferredCurrency = settings.value.defaultCurrency || 'CNY';
+                    
+                    // Group by currency
+                    const byCurrency = {};
+                    hist.forEach(item => {
+                        const cur = item.currency || 'CNY';
+                        const price = Number(item.price) || 0;
+                        byCurrency[cur] = (byCurrency[cur] || 0) + price;
+                    });
+                    
+                    // Convert to preferred currency
+                    let convertedTotal = 0;
+                    const rates = exchangeRates.value;
+                    Object.keys(byCurrency).forEach(cur => {
+                        const amount = byCurrency[cur];
+                        if (cur === preferredCurrency) {
+                            convertedTotal += amount;
+                        } else if (rates[cur]) {
+                            // rates 是以 preferredCurrency 为基准的
+                            // 所以 amount / rates[cur] = 换算后的 preferredCurrency 金额
+                            convertedTotal += amount / rates[cur];
+                        } else {
+                            // 无汇率时直接累加（近似）
+                            convertedTotal += amount;
+                        }
+                    });
+                    
+                    return { 
+                        count, 
+                        byCurrency, 
+                        convertedTotal: convertedTotal.toFixed(2), 
+                        preferredCurrency 
+                    };
                 });
 
 
@@ -3387,14 +3555,14 @@ const HTML = `<!DOCTYPE html>
                     Edit, Delete, Plus, VideoPlay, Setting, Bell, Document, Lock, Monitor, SwitchButton, Calendar, Timer, Files, AlarmClock, Warning, Search, Cpu, Link, Message, Promotion, Iphone, Moon, Sunny, ArrowDown,
                     getDaysClass, formatDaysLeft, getTagClass, getLogColor, getLunarStr, getYearGanZhi, getSmartLunarText, getLunarTooltip, getMonthStr, getTagCount, tableRowClassName, channelMap, toggleChannel, testChannel, testing,
                     expandedChannels,
-                    calendarUrl, copyIcsUrl, resetCalendarToken,manualRenew,RefreshRight,timezoneList,currentPage, pageSize, pagedList, previewData,
+                    calendarUrl, copyIcsUrl, resetCalendarToken, migrateOldData, manualRenew,RefreshRight,timezoneList,currentPage, pageSize, pagedList, previewData,
                     isDark, toggleTheme, drawerSize, actionColWidth, paginationLayout, confirmDelete, confirmRenew, More, windowWidth,
                     handleSortChange, handleFilterChange, 
                     nextDueFilters, typeFilters, uptimeFilters, lastRenewFilters,
                     currencyList,editingHistoryIndex, tempHistoryItem, startEditHistory, cancelEditHistory, saveEditHistory,
                     Money: ElementPlusIconsVue.Money || ElementPlusIconsVue.Coin, // 如果没有 Money 图标，用 Coin 代替
                     renewDialogVisible, renewMode, renewForm, openRenew, submitRenew,
-                    historyDialogVisible, currentHistoryItem, historyPage, historyPageSize, pagedHistory, openHistory, saveHistoryInfo, addHistoryRecord, removeHistoryRecord, historyStats,
+                    historyDialogVisible, currentHistoryItem, historyPage, historyPageSize, pagedHistory, openHistory, saveHistoryInfo, addHistoryRecord, removeHistoryRecord, historyStats, exchangeRates, ratesLoading,
                     addHistoryDialogVisible, addHistoryForm, submitAddHistory,
                     editingHistoryIndex, tempHistoryItem, startEditHistory, saveEditHistory, cancelEditHistory
                 };
