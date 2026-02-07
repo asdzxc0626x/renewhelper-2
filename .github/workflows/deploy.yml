@@ -2,29 +2,38 @@ name: Deploy to Cloudflare Workers
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    name: Deploy
     steps:
-      - name: Checkout
+      - name: 🛒 Checkout
         uses: actions/checkout@v4
 
-      - name: Inject KV ID
+      - name: 🔧 Inject KV ID
+        # 仅保留这一步修改 wrangler.toml 里的 KV 绑定
         run: |
-          sed -i 's/^\s*id = ""/id = "${{ secrets.CF_KV_ID }}"/' wrangler.toml
-          sed -i '/AUTH_PASSWORD/d' wrangler.toml
+          sed -i 's/id\s*=\s*""/id = "${{ secrets.CF_KV_ID }}"/' wrangler.toml
 
-      - name: Deploy with Wrangler
+      - name: 🚀 Deploy as Plain Text Vars
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          secrets: |
+          # 核心改进：直接在这里定义，Wrangler 会把它们当作明文变量(Vars)上传
+          # 这样你在 CF 后台看到的就是文本状态
+          vars: |
             AUTH_PASSWORD
+          command: deploy
         env:
+          # 将 GitHub Secret 映射给上面的 vars 配置使用
           AUTH_PASSWORD: ${{ secrets.AUTH_PASSWORD }}
+
+      - name: 🔍 Debug Status
+        if: always()
+        run: |
+          echo "### 部署报告" >> $GITHUB_STEP_SUMMARY
+          echo "- **变量模式**: 明文文本 (Plain Text Vars)" >> $GITHUB_STEP_SUMMARY
+          echo "- **检查位置**: Cloudflare Dashboard -> Settings -> Variables" >> $GITHUB_STEP_SUMMARY
