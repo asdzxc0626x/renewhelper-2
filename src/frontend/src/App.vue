@@ -4,6 +4,8 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import en from 'element-plus/es/locale/lang/en';
+import ServerChan3 from './components/icons/ServerChan3.vue';
+import DingTalk from './components/icons/DingTalk.vue';
 
 // 图标解构
 const { Edit, Delete, Plus, VideoPlay, Setting, Bell, Document, Lock, Monitor, SwitchButton, Calendar, Timer, Files, AlarmClock, Warning, Search, Cpu, Upload, Download, Link, Connection, Message, Promotion, Iphone, Moon, Sunny, RefreshRight, More, ArrowDown, Tickets, Sort, ArrowLeft, ArrowRight, InfoFilled, Close, Coin, Position, Notification, Comment, SuccessFilled, WarningFilled } = ElementPlusIconsVue;
@@ -76,7 +78,7 @@ const FALLBACK_RATES = {
         const messages = {
             zh: { upcomingBillsDays:'待付款提醒天数', upcomingBills: '%s日内待付款项', filter:{expired:'已过期 / 今天', w7:'%s天内', w30:'30天内', thisMonth:'本月内', nextMonth:'下月内', halfYear:'半年内', oneYear:'1年内', new:'新服务 (<30天)', stable:'稳定 (1个月-1年)', long:'长期 (>1年)', m1:'最近1个月', m6:'半年内', year:'今年内', earlier:'更早以前'}, viewSwitch:'视图切换',viewProjects:'项目列表',viewSpending:'支出分析',annualSummary:'年度汇总',monthlyTrend:'月度趋势',noSpendingData:'暂无支出数据',avgMonthly:'月均',billAmount:'账单金额 (按账单周期)',opSpending:'实际支出 (按操作日期)',secPref: '偏好设置',manualRenew: '手动续期',tipToggle: '切换状态',tipRenew: '手动续期',tipEdit: '编辑服务',tipDelete: '删除服务',tipDeleteCh: '删除渠道',secNotify: '通知配置',secData: '数据管理',lblIcsTitle: '日历订阅',lblIcsUrl: '订阅地址 (iOS/Google)',btnCopy: '复制',btnResetToken: '重置令牌',loginTitle:'身份验证',passwordPlaceholder:'请输入访问密钥/Authorization Key',unlockBtn:'解锁终端/UNLOCK',check:'立即检查',add:'新增服务',settings:'系统设置',logs:'运行日志',logout:'安全退出',totalServices:'服务总数',expiringSoon:'即将到期',expiredAlert:'已过期 / 警告',serviceName:'服务名称',type:'类型',nextDue:'下次到期',uptime:'已运行',lastRenew:'上次续期',cyclePeriod:'周期',actions:'操作',cycle:'循环订阅',reset:'到期重置',disabled:'已停用',days:'天',daysUnit:'天',typeReset:'到期重置',typeCycle:'循环订阅',lunarCal:'农历',lbOffline:'离线',unit:{day:'天',month:'月',year:'年'},editService:'编辑服务',editLastRenewHint:'请在「历史记录」中修改',newService:'新增服务',formName:'名称',namePlaceholder:'例如: Netflix',formType:'模式',createDate:'创建时间',interval:'周期时长',note:'备注信息',status:'状态',active:'启用',disabledText:'禁用',cancel:'取消',save:'保存数据',saveSettings:'保存配置',settingsTitle:'系统设置',setNotify:'通知配置',pushSwitch:'推送总开关',pushUrl:'Webhook 地址',notifyThreshold:'提醒阈值',setAuto:'自动化配置',autoRenewSwitch:'自动续期',autoRenewThreshold:'自动续期阈值',autoDisableThreshold:'自动禁用阈值',daysOverdue:'天后触发',sysLogs:'系统日志',execLogs:'执行记录',clearHistory:'清空历史',noLogs:'无记录',liveLog:'实时终端',btnExport: '导出备份',btnImport: '恢复备份',btnTest: '发送测试',btnRefresh:'刷新日志',
             lblEnable: '启用', lblToken: '令牌 (Token)', lblApiKey: 'API Key', lblChatId: '会话ID', 
-            lblServer: '服务器URL', lblDevKey: '设备Key', lblFrom: '发件人', lblTo: '收件人',
+            lblServer: '服务器URL', lblDevKey: '设备Key', lblFrom: '发件人', lblTo: '收件人', lblUid: '用户ID (UID)', lblSendKey: '发送密钥 (SendKey)', lblSecret: '加签密钥 (Secret)',
             lblTopic: '主题 (Topic)',readOnly: '只读',
             lblNotifyTime: '提醒时间', btnResetToken: '重置令牌',
             lblHeaders: '请求头 (JSON)', lblBody: '消息体 (JSON)',
@@ -85,7 +87,8 @@ const FALLBACK_RATES = {
             addChannel: '添加渠道', noChannels: '暂无推送渠道，请点击右上角添加。', modifyChannel: '配置渠道', channelType: '渠道类型', channelName: '渠道名称 (备注)', selectChannels: '选择推送渠道 (留空则默认推送所有)'},
             en: { upcomingBillsDays:'Pending Reminder', upcomingBills: '%s Days Pending', viewSwitch:'VIEW SWITCH',viewProjects:'PROJECTS',viewSpending:'DASHBOARD',annualSummary:'Annual Summary',monthlyTrend:'Monthly Trend',noSpendingData:'No Spending Data',billAmount:'BILL AMOUNT',opSpending:'ACTUAL COST', avgMonthly:'AVG', avgMonthlyLabel:'AVG MONTHLY', filter:{expired:'Overdue/Today', w7:'Within %s Days', w30:'Within 30 Days', future:'Future(>30d)', new:'New (<30d)', stable:'Stable (1m-1y)', long:'Long Term (>1y)', m1:'Last Month', m6:'Last 6 Months', year:'This Year', earlier:'Earlier'}, secPref: 'PREFERENCES',manualRenew: 'Quick Renew',tipToggle: 'Toggle Status',tipRenew: 'Quick Renew',tipEdit: 'Edit Service',tipDelete: 'Delete Service',tipDeleteCh: 'Delete Channel',secNotify: 'NOTIFICATIONS',secData: 'DATA MANAGEMENT',lblIcsTitle: 'CALENDAR SUBSCRIPTION',lblIcsUrl: 'ICS URL (iOS/Google Calendar)',btnCopy: 'COPY',btnResetToken: 'RESET TOKEN',loginTitle:'SYSTEM ACCESS',passwordPlaceholder:'Authorization Key',unlockBtn:'UNLOCK TERMINAL',check:'CHECK',add:'ADD NEW',settings:'CONFIG',logs:'LOGS',logout:'LOGOUT',totalServices:'TOTAL SERVICES',expiringSoon:'EXPIRING SOON',expiredAlert:'EXPIRED / ALERT',serviceName:'SERVICE NAME',type:'TYPE',nextDue:'NEXT DUE',uptime:'UPTIME',lastRenew:'LAST RENEW',cyclePeriod:'CYCLE',actions:'ACTIONS',cycle:'CYCLE',reset:'RESET',disabled:'DISABLED',days:'DAYS',daysUnit:'DAYS',typeReset:'RESET',typeCycle:'CYCLE',lunarCal:'Lunar',lbOffline:'OFFLINE',unit:{day:'DAY',month:'MTH',year:'YR'},editService:'EDIT SERVICE',editLastRenewHint:'Please modify in History',newService:'NEW SERVICE',formName:'NAME',namePlaceholder:'e.g. Netflix',formType:'MODE',createDate:'CREATE DATE',interval:'INTERVAL',note:'NOTE',status:'STATUS',active:'ACTIVE',disabledText:'DISABLED',cancel:'CANCEL',save:'SAVE DATA',saveSettings:'SAVE CONFIG',settingsTitle:'SYSTEM CONFIG',setNotify:'NOTIFICATION',pushSwitch:'MASTER PUSH',pushUrl:'WEBHOOK URL',notifyThreshold:'ALERT THRESHOLD',setAuto:'AUTOMATION',autoRenewSwitch:'AUTO RENEW',autoRenewThreshold:'RENEW AFTER',autoDisableThreshold:'DISABLE AFTER',daysOverdue:'DAYS OVERDUE',sysLogs:'SYSTEM LOGS',execLogs:'EXECUTION LOGS',clearHistory:'CLEAR HISTORY',noLogs:'NO DATA',liveLog:'LIVE TERMINAL',btnExport: 'Export Data',btnImport: 'Import Data',btnTest: 'Send Test',btnRefresh:'REFRESH',last12M:'LAST 12M',
             lblEnable: 'Enable', lblToken: 'Token', lblApiKey: 'API Key', lblChatId: 'Chat ID', 
-            lblServer: 'Server URL', lblDevKey: 'Device Key', lblFrom: 'From Email', lblTo: 'To Email',
+            lblServer: 'Server URL', lblDevKey: 'Device Key', lblFrom: 'From Email', lblTo: 'To Email', lblUid: 'UID', lblSendKey: 'SendKey', lblSecret: 'Secret (Optional)',
+
             lblTopic: 'Topic',readOnly: 'Read-only',
             lblNotifyTime: 'Alarm Time', btnResetToken: 'RESET TOKEN',
             lblHeaders: 'Headers (JSON)', lblBody: 'Body (JSON)',
@@ -137,6 +140,8 @@ const calculateCycleEndDate = (startDateStr, item) => {
 
     const isLoggedIn = ref(!!localStorage.getItem('jwt_token')), password = ref(''), loading = ref(false), list = ref([]), settings = ref({ upcomingBillsDays: 7 });
     const dataVersion = ref(0); // 新增版本号状态
+    const hasNewVersion = ref(false); // 版本更新提示
+    const newVersionCode = ref('');
     const dialogVisible = ref(false), settingsVisible = ref(false), historyVisible = ref(false), historyLoading = ref(false), historyLogs = ref([]);
     const checking = ref(false), logs = ref([]), displayLogs = ref([]), isEdit = ref(false), lang = ref('zh'), currentTag = ref(''), searchKeyword = ref('');
     const currentView = ref('project');
@@ -155,7 +160,8 @@ const calculateCycleEndDate = (startDateStr, item) => {
         timezone:'UTC',
         defaultCurrency:'CNY',
         channels: [], // New structure
-        calendarToken: ''
+        calendarToken: '',
+        backupKey: ''
     });
     // const channelMap = reactive({ ... }); // Removed
     // const testing = reactive({ ... }); // Removed
@@ -163,7 +169,7 @@ const calculateCycleEndDate = (startDateStr, item) => {
     const channelForm = ref({ id:'', type:'', name:'', config:{}, enable:true });
     const editingChannelIndex = ref(-1);
     
-    const channelTypes = ['telegram', 'bark', 'pushplus', 'notifyx', 'resend', 'webhook', 'gotify', 'ntfy'];
+    const channelTypes = ['telegram', 'bark', 'pushplus', 'dingtalk', 'serverchan3', 'notifyx', 'resend', 'webhook', 'gotify', 'ntfy'];
     
     const onChannelTypeChange = () => {
         // Reset config when type changes
@@ -179,6 +185,8 @@ const calculateCycleEndDate = (startDateStr, item) => {
         if (ch.type === 'bark') return ch.config.server || 'Default';
         if (ch.type === 'webhook') return ch.config.url;
         if (ch.type === 'ntfy') return `${ ch.config.topic } @${ ch.config.server || 'ntfy.sh' } `;
+        if (ch.type === 'serverchan3') return ch.config.uid;
+        if (ch.type === 'dingtalk') return `...${ch.config.token.slice(-6)}`;
         if (ch.type === 'resend') return `${ ch.config.from } -> ${ ch.config.to } `;
         return '';
     };
@@ -197,6 +205,16 @@ const calculateCycleEndDate = (startDateStr, item) => {
         channelDialogVisible.value = true;
     };
 
+
+    // UUID Generator (Compatible with HTTP context)
+    const generateUUID = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    };
 
     const saveChannel = () => {
         if (!channelForm.value.type) return;
@@ -217,7 +235,7 @@ const calculateCycleEndDate = (startDateStr, item) => {
             if (realIdx !== -1) settingsForm.value.channels[realIdx] = newCh;
         } else {
             // Add
-            newCh.id = crypto.randomUUID();
+            newCh.id = generateUUID();
             if (!settingsForm.value.channels) settingsForm.value.channels = [];
             settingsForm.value.channels.push(newCh);
             // Expand list if needed
@@ -757,6 +775,40 @@ const calculateCycleEndDate = (startDateStr, item) => {
         return r;
     });
 
+    
+    const checkAppVersion = async () => {
+        try {
+            const res = await fetch('https://versync.pages.dev/renewhelper.json');
+            if(res.ok) {
+                const data = await res.json();
+                if(data.version) {
+                     // Title format: "RenewHelper v2.2.7"
+                     const title = document.title;
+                     const match = title.match(/v(\d+\.\d+\.\d+)/);
+                     if(match) {
+                         const currentVer = match[1];
+                         console.log('Version Check:', currentVer, 'vs', data.version);
+                         
+                         const v1 = data.version.split('.').map(Number);
+                         const v2 = currentVer.split('.').map(Number);
+                         let isNew = false;
+                         for(let i=0; i<Math.max(v1.length, v2.length); i++) {
+                             const n1 = v1[i] || 0;
+                             const n2 = v2[i] || 0;
+                             if(n1 > n2) { isNew = true; break; }
+                             if(n1 < n2) break;
+                         }
+
+                         if(isNew) {
+                             hasNewVersion.value = true;
+                             newVersionCode.value = data.version;
+                         }
+                     }
+                }
+            }
+        } catch(e) { console.error('Version check failed', e); }
+    };
+
     onMounted(() => {
         // Check if migration is needed (Once per day)
         const checkMigrationNeeded = async () => {
@@ -788,69 +840,74 @@ const calculateCycleEndDate = (startDateStr, item) => {
 
         const l = localStorage.getItem('lang'); if(l) setLang(l);
         const tk = localStorage.getItem('jwt_token'); if(tk) fetchList(tk);
-        
-        // After initial fetchList (if token exists), check for migration (Bills & Channels)
+        // 1. Version Check (Async, non-blocking)
+        checkAppVersion();        
+        // After initial fetchList (if token exists), check for migration (Bills & Channels) AND Version Check
         const unwatchList = watch([list, settings], ([newList, newSettings]) => {
             if (newList && newList.length > 0) {
-                // 1. Check Bills
-                const billInfo = newList.filter(item => (!item.renewHistory || item.renewHistory.length === 0) && item.lastRenewDate && item.intervalDays);
+                const lastCheck = localStorage.getItem('lastMigrationCheck');
+                const today = new Date().toDateString();
                 
-                // 2. Check Channels
-                let channelCount = 0;
-                if (newSettings && newSettings.notifyConfig) {
-                    const oldConf = newSettings.notifyConfig;
-                    const existingChannels = newSettings.channels || [];
-                    const types = ['telegram', 'bark', 'pushplus', 'notifyx', 'resend', 'webhook', 'gotify', 'ntfy'];
-                    types.forEach(t => {
-                        const c = oldConf[t];
-                        // 逻辑同步：严格检查有效性
-                        if (c && Object.values(c).some(v => v && v.trim())) {
-                             if (t === 'bark' && (!c.key || !c.key.trim())) return;
-                             if (t === 'ntfy' && (!c.token || !c.token.trim())) return;
-                             
-                             if (!existingChannels.some(ex => ex.type === t && ex.name.endsWith('_Old'))) {
-                                 channelCount++;
-                             }
-                        }
-                    });
-                }
+                // Only check once a day (Shared Key for Migration & Version Check)
+                if (lastCheck !== today) {
+                    
 
-                if (billInfo.length > 0 || channelCount > 0) {
-                    const lastCheck = localStorage.getItem('lastMigrationCheck');
-                    const today = new Date().toDateString();
-                    if (lastCheck !== today) {
-                        localStorage.setItem('lastMigrationCheck', today);
-                        
-                        let msg = '';
-                        if (billInfo.length > 0 && channelCount > 0) {
-                            msg = lang.value === 'zh' ? `检测到 ${billInfo.length} 个项目缺少账单，${channelCount} 个通知渠道待迁移。` : `Found ${billInfo.length} items lacking bills and ${channelCount} legacy channels.`;
-                        } else if (billInfo.length > 0) {
-                            msg = lang.value === 'zh' ? `检测到 ${billInfo.length} 个项目缺少历史账单。` : `Found ${billInfo.length} items without history.`;
-                        } else {
-                            msg = lang.value === 'zh' ? `检测到 ${channelCount} 个旧版通知渠道待迁移。` : `Found ${channelCount} legacy channels to migrate.`;
-                        }
-                        
-                        ElMessageBox.confirm(
-                            msg + (lang.value === 'zh' ? ' 建议先备份数据再执行迁移，是否继续？(今日仅提示一次)' : ' Recommend backup first. Continue? (Ask once today)'),
-                            lang.value === 'zh' ? '数据优化建议' : 'Optimization Suggestion',
-                            { confirmButtonText: lang.value === 'zh' ? '备份并迁移' : 'Backup & Migrate', cancelButtonText: t('cancel'), type: 'info' }
-                        ).then(async () => {
-                            await exportData();
-                            setTimeout(() => {
-                                ElMessageBox.confirm(
-                                    lang.value === 'zh' ? '备份文件是否已保存？确认后将开始迁移。' : 'Is the backup saved? Migration will start upon confirmation.',
-                                    lang.value === 'zh' ? '最后确认' : 'Final Confirmation',
-                                    { confirmButtonText: lang.value === 'zh' ? '确认迁移' : 'Start Migration', cancelButtonText: t('cancel'), type: 'warning' }
-                                ).then(() => {
-                                    migrateOldData(true);
-                                }).catch(()=>{});
-                            }, 1000);
-                        }).catch(()=>{});
+
+                    // 2. Migration Check
+                    const billInfo = newList.filter(item => (!item.renewHistory || item.renewHistory.length === 0) && item.lastRenewDate && item.intervalDays);
+                    let channelCount = 0;
+                    if (newSettings && newSettings.notifyConfig) {
+                        const oldConf = newSettings.notifyConfig;
+                        const existingChannels = newSettings.channels || [];
+                        const types = ['telegram', 'bark', 'pushplus', 'notifyx', 'resend', 'webhook', 'gotify', 'ntfy'];
+                        types.forEach(t => {
+                            const c = oldConf[t];
+                            if (c && Object.values(c).some(v => v && v.trim())) {
+                                 if (t === 'bark' && (!c.key || !c.key.trim())) return;
+                             if (t === 'ntfy' && (!c.topic || !c.topic.trim())) return;  // topic 不能为空
+                             
+                                 if (!existingChannels.some(ex => ex.type === t && ex.name.endsWith('_Old'))) {
+                                     channelCount++;
+                                 }
+                            }
+                        });
+                    }
+
+                    if (billInfo.length > 0 || channelCount > 0) {
+                            let msg = '';
+                            if (billInfo.length > 0 && channelCount > 0) {
+                                msg = lang.value === 'zh' ? `检测到 ${billInfo.length} 个项目缺少账单，${channelCount} 个通知渠道待迁移。` : `Found ${billInfo.length} items lacking bills and ${channelCount} legacy channels.`;
+                            } else if (billInfo.length > 0) {
+                                msg = lang.value === 'zh' ? `检测到 ${billInfo.length} 个项目缺少历史账单。` : `Found ${billInfo.length} items without history.`;
+                            } else {
+                                msg = lang.value === 'zh' ? `检测到 ${channelCount} 个旧版通知渠道待迁移。` : `Found ${channelCount} legacy channels to migrate.`;
+                            }
+                            
+                            ElMessageBox.confirm(
+                                msg + (lang.value === 'zh' ? ' 建议先备份数据再执行迁移，是否继续？(今日仅提示一次)' : ' Recommend backup first. Continue? (Ask once today)'),
+                                lang.value === 'zh' ? '数据优化建议' : 'Optimization Suggestion',
+                                { confirmButtonText: lang.value === 'zh' ? '备份并迁移' : 'Backup & Migrate', cancelButtonText: t('cancel'), type: 'info' }
+                            ).then(async () => {
+                                await exportData();
+                                setTimeout(() => {
+                                    ElMessageBox.confirm(
+                                        lang.value === 'zh' ? '备份文件是否已保存？确认后将开始迁移。' : 'Is the backup saved? Migration will start upon confirmation.',
+                                        lang.value === 'zh' ? '最后确认' : 'Final Confirmation',
+                                        { confirmButtonText: lang.value === 'zh' ? '确认迁移' : 'Start Migration', cancelButtonText: t('cancel'), type: 'warning' }
+                                    ).then(() => {
+                                        migrateOldData(true);
+                                    }).catch(()=>{});
+                                }, 1000);
+                            }).catch(()=>{});
+                    }
+                    
+                    // Mark as checked for today
+                    localStorage.setItem('lastMigrationCheck', today);
                 }
             }
                 fetchExchangeRates(settings.value.defaultCurrency || 'CNY');
                 unwatchList();
-            }
+
         });
 
         window.addEventListener('resize', updateWidth);
@@ -1078,6 +1135,16 @@ const calculateCycleEndDate = (startDateStr, item) => {
         settingsVisible.value=true; 
     };
     const saveSettings = async (close = true) => { 
+        // Validate Backup Key
+        const bk = settingsForm.value.backupKey;
+        if (bk && bk.trim()) {
+            if (bk.length < 8) {
+                return ElMessage.error(lang.value === 'zh' ? '备份密钥长度至少8位' : 'Backup Key must be at least 8 chars');
+            }
+            if (!/^(?=.*[a-zA-Z])(?=.*\d).+$/.test(bk)) {
+                 return ElMessage.error(lang.value === 'zh' ? '备份密钥需包含字母和数字' : 'Backup Key must contain letters and numbers');
+            }
+        } 
         const oldCurrency = settings.value.defaultCurrency;
         settings.value={...settingsForm.value}; 
         await saveData(null,settings.value); 
@@ -1960,10 +2027,13 @@ const calculateCycleEndDate = (startDateStr, item) => {
             gotify: 'text-cyan-500 border-cyan-500',
             ntfy: 'text-teal-500 border-teal-500',
             resend: 'text-indigo-500 border-indigo-500',
-            webhook: 'text-amber-500 border-amber-500'
+            webhook: 'text-amber-500 border-amber-500',
+            serverchan3: 'text-green-500 border-green-500',
+            dingtalk: 'text-sky-500 border-sky-500'
         };
         return map[type] || 'text-slate-500 border-slate-500';
     };
+    const openLink = (url) => { if(url) window.open(url, '_blank'); };
 </script>
 <template>
     <div id="app" v-cloak class="min-h-screen p-4 sm:p-8 flex flex-col transition-colors duration-300">
@@ -2609,7 +2679,9 @@ const calculateCycleEndDate = (startDateStr, item) => {
                 <div class="mt-8 py-6 text-center border-t border-slate-200/60">
                     <p class="text-[10px] text-gray-400 font-mono tracking-[0.2em] uppercase flex justify-center items-center gap-1">
                         &copy; 2025-2026 <a href="https://github.com/ieax/renewhelper" target="_blank" class="font-bold text-slate-600 hover:text-blue-600 transition-colors border-b border-dashed border-slate-300 hover:border-blue-600 pb-0.5 mx-1 decoration-0">RenewHelper</a>
-                        <span class="text-blue-500 font-bold">${APP_VERSION}</span><span class="mx-2 opacity-30">|</span>DESIGNED BY <span class="font-bold text-slate-600">LOSTFREE</span>
+                        <span class="text-blue-500 font-bold">${APP_VERSION}</span>
+                        <el-tag v-if="hasNewVersion" type="success" size="small" effect="plain" class="ml-1 cursor-pointer !bg-transparent !px-1 !h-4 !text-[9px] !leading-none !tracking-normal !font-bold" @click="openLink('https://github.com/ieax/renewhelper/releases')">NEW v{{ newVersionCode }}</el-tag>
+                        <span class="mx-2 opacity-30">|</span>DESIGNED BY <span class="font-bold text-slate-600">LOSTFREE</span>
                     </p>
                 </div>                  
             </div>
@@ -2757,6 +2829,7 @@ const calculateCycleEndDate = (startDateStr, item) => {
                                               </el-form-item>
                                               <el-form-item :label="t('autoDisableThreshold')"><el-input-number v-model="settingsForm.autoDisableDays" :min="1" :max="365" class="!w-full"></el-input-number></el-form-item>
                                               <el-form-item :label="t('upcomingBillsDays')"><el-input-number v-model="settingsForm.upcomingBillsDays" :min="1" :max="365" class="!w-full"></el-input-number></el-form-item>
+
                                           </div>
                                       </el-form>
                                  </div>
@@ -2797,6 +2870,9 @@ const calculateCycleEndDate = (startDateStr, item) => {
                                                           <el-icon v-else-if="ch.type==='gotify'"><Bell /></el-icon>
                                                           <el-icon v-else-if="ch.type==='ntfy'"><Position /></el-icon>
                                                           <el-icon v-else-if="ch.type==='resend'"><Message /></el-icon>
+                                                          <el-icon v-else-if="ch.type==='resend'"><Message /></el-icon>
+                                                          <el-icon v-else-if="ch.type==='serverchan3'"><ServerChan3 /></el-icon>
+                                                          <el-icon v-else-if="ch.type==='dingtalk'"><DingTalk /></el-icon>
                                                           <el-icon v-else><Connection /></el-icon>
                                                           
                                                           <!-- Status Dot -->
@@ -2893,6 +2969,14 @@ const calculateCycleEndDate = (startDateStr, item) => {
                                   <h3 class="text-base font-bold text-slate-800 dark:text-gray-100 mb-3 pb-2 border-b border-gray-100 dark:border-slate-800">{{ lang==='zh'?'数据管理':'Data Management' }}</h3>
                                   
                                   <div class="space-y-3">
+                                      <div class="p-3 border border-gray-100 dark:border-slate-700 rounded-lg">
+                                          <div class="font-bold text-slate-700 dark:text-gray-200">{{ lang==='zh'?'备份密钥':'Backup Key' }}</div>
+                                          <el-input v-model="settingsForm.backupKey" :placeholder="lang==='zh'?'至少8位，包含字母和数字 (留空不启用)' : 'Min 8 chars, Alphanumeric (Optional)'" show-password type="password">
+                                              <template #prefix><el-icon><Lock /></el-icon></template>
+                                          </el-input>
+                                          <div class="text-[10px] text-gray-400 mt-1">{{ lang==='zh'?'用于 /api/backup 接口的专用访问密钥，配置后可替代 JWT Token 使用。' : 'Dedicated key for /api/backup, can be used instead of JWT Token.' }}</div>
+                                      </div>
+
                                       <div class="p-3 border border-gray-100 dark:border-slate-700 rounded-lg flex items-center justify-between">
                                           <div>
                                               <div class="font-bold text-slate-700 dark:text-gray-200">{{ t('btnExport') }}</div>
@@ -3024,6 +3108,14 @@ const calculateCycleEndDate = (startDateStr, item) => {
                         <el-form-item :label="t('lblServer')"><el-input v-model="channelForm.config.server"></el-input></el-form-item>
                         <el-form-item :label="t('lblTopic')"><el-input v-model="channelForm.config.topic"></el-input></el-form-item>
                         <el-form-item :label="t('lblToken')"><el-input v-model="channelForm.config.token"></el-input></el-form-item>
+                    </div>
+                    <div v-else-if="channelForm.type === 'serverchan3'" class="space-y-3">
+                        <el-form-item :label="t('lblUid')"><el-input v-model="channelForm.config.uid"></el-input></el-form-item>
+                        <el-form-item :label="t('lblSendKey')"><el-input v-model="channelForm.config.key"></el-input></el-form-item>
+                    </div>
+                    <div v-else-if="channelForm.type === 'dingtalk'" class="space-y-3">
+                        <el-form-item :label="t('lblToken')"><el-input v-model="channelForm.config.token" placeholder="access_token"></el-input></el-form-item>
+                        <el-form-item :label="t('lblSecret')"><el-input v-model="channelForm.config.secret" placeholder="SEC... (Optional)"></el-input></el-form-item>
                     </div>
                     <div v-else-if="channelForm.type === 'resend'" class="space-y-3">
                         <el-form-item :label="t('lblApiKey')"><el-input v-model="channelForm.config.apiKey"></el-input></el-form-item>
