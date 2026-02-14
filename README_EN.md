@@ -23,7 +23,7 @@
   - Two modes: "Cycle Subscription" (Repeating) and "Expiration Reset" (Manual extension).
 - **🔔 Multi-Channel Notifications**:
   - Built-in support for **Telegram, Bark, PushPlus, ServerChan3, DingTalk, NotifyX, Resend (Email), Gotify, Ntfy, Webhook**.
-  - Allows adding **unlimited** notification channels, supporting different channels for each project.
+  - Allows adding **unlimited** notification channels, supporting different channels for each project. Supports **batch management** and **quick assignment**.
   - Support customizable push titles, advance notice days, and daily push times.
 - **💰 Billing & Spending Dashboard** (New v2.0+):
   - Stunning visualization of your spending trends by month and year.
@@ -188,10 +188,10 @@ services:
     docker compose up -d
     ```
 
-4.  Access the dashboard at: `http://your-server-ip:9787`. To access RenewHelper securely over the internet with a domain (e.g., `https://renew.example.com`), you should set up a Reverse Proxy.
+4.  **Configure HTTPS Reverse Proxy (Required)**: RenewHelper depends on **Web Crypto API** for core encryption/decryption, thus it **MUST run under HTTPS** (except localhost). Please configure Nginx, Caddy, or other reverse proxies with SSL certificates.
 
 <details>
-<summary><strong>🔒 Advanced: HTTPS & Domain Setup (Caddy)</strong></summary>
+<summary><strong>🔒 Deployment Guide: Caddy Reverse Proxy (Recommended)</strong></summary>
 
 #### 1. Modify `docker-compose.yml`
 
@@ -290,7 +290,7 @@ After deployment, visit your Worker URL or custom domain (e.g., `https://renewhe
 
 ### 📢 Notification Channels
 
-In the "Settings" -> "Notifications" section, click the **Add Channel** button, select the type, and fill in the parameters. The system supports configuring **unlimited** notification channels simultaneously. You can **Send Test** to verify connectivity after configuration.
+In the "Settings" -> "Notifications" section, click the **Add Channel** button, select the type, and fill in the parameters. The system supports configuring **unlimited** notification channels simultaneously. You can **Send Test** to verify connectivity, and use the **Select All/Inverse** & **Batch Action Bar** above the list to enable, disable, delete, or **one-click assign** channels to specific services.
 
 | Channel            | Parameter Description                                                       | How to Obtain/Configure                                                                                                                                                                                                                                  |
 | :----------------- | :-------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
