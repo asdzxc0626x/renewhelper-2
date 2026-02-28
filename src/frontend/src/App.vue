@@ -140,7 +140,19 @@ const frontendCalc = {
                     if (!byweekday || !byweekday.length || byweekday.includes(curr.getUTCDay())) candidates.push(curr);
                 }
             } else if (freq === 'daily') {
-                candidates.push(new Date(Date.UTC(y, m, d + periods * interval)));
+                // bycycleday: 1-indexed day in cycle (1=start day)
+                let bycycleday = Array.isArray(repeat.bycycleday) ? repeat.bycycleday : (repeat.bycycleday ? [repeat.bycycleday] : null);
+                if (bycycleday && bycycleday.length > 0) {
+                    let cycleStart = new Date(Date.UTC(y, m, d + periods * interval));
+                    for (let bd of bycycleday) {
+                        let dayOffset = Number(bd) - 1;
+                        if (dayOffset >= 0 && dayOffset < interval) {
+                            candidates.push(new Date(Date.UTC(cycleStart.getUTCFullYear(), cycleStart.getUTCMonth(), cycleStart.getUTCDate() + dayOffset)));
+                        }
+                    }
+                } else {
+                    candidates.push(new Date(Date.UTC(y, m, d + periods * interval)));
+                }
             }
             candidates = candidates.filter(cd => cd > baseObj);
             if (candidates.length > 0) {
@@ -148,7 +160,7 @@ const frontendCalc = {
                 return candidates[0];
             }
         }
-        return null; // 无法找到匹配日期
+        return null;
     }
 };
 const messages = {
@@ -171,18 +183,27 @@ const messages = {
         lblTopic: 'Topic', readOnly: 'Read-only',
         lblNotifyTime: 'Alarm Time', btnResetToken: 'RESET TOKEN',
         lblHeaders: 'Headers (JSON)', lblBody: 'Body (JSON)',
-        tag: { alert: 'ALERT', renew: 'RENEWED', disable: 'DISABLED', normal: 'NORMAL' }, tagLatest: 'LATEST', tagAuto: 'AUTO', tagManual: 'MANUAL', msg: { confirmRenew: 'Renew [%s] to today based on your timezone?', renewSuccess: 'Renewed! Date updated: %s -> %t', tokenReset: 'Token Reset. Update your calendar apps.', copyOk: 'Link Copied', exportSuccess: 'Backup Downloaded', importSuccess: 'Restore Success, Refreshing...', importFail: 'Import Failed, Check File Format', passReq: 'Password Required', saved: 'Data Saved', saveFail: 'Save Failed', cleared: 'Cleared', clearFail: 'Clear Failed', loginFail: 'Access Denied', loadLogFail: 'Load Failed', confirmDel: 'Confirm Delete?', dateError: 'Last renew date cannot be earlier than create date', nameReq: 'Name Required', nameExist: 'Name already exists', futureError: 'Renew date cannot be in the future', serviceDisabled: 'Service Disabled', serviceEnabled: 'Service Enabled', execFinish: 'EXECUTION FINISHED!', rateFallback: 'Network Error. Used default rates.' }, tags: 'TAGS', tagPlaceholder: 'Press Enter to create tag', searchPlaceholder: 'Search...', tagsCol: 'TAGS', tagAll: 'ALL', useLunar: 'Lunar Cycle', lunarTip: 'Calculate based on Lunar calendar', yes: 'Yes', no: 'No', timezone: 'Timezone', disabledFilter: 'DISABLED', policyConfig: 'Policy Config', policyNotify: 'Notify Days', policyAuto: 'Auto Renew', policyRenewDay: 'Renew Days', useGlobal: 'Global Default', autoRenewOnDesc: 'Auto Renew when overdue', autoRenewOffDesc: 'Auto Disable when overdue', previewCalc: 'Based on Last Renew Date & Interval', nextDue: 'NEXT DUE', typeRepeat: 'REPEAT',
-        fixedPrice: 'PRICE', currency: 'Currency', defaultCurrency: 'Default Currency', history: 'History', historyTitle: 'Renewal History', totalCost: 'Total Cost', totalCount: 'Total Count', renewDate: 'Op Date', billPeriod: 'Bill Period', startDate: 'Start Date', endDate: 'End Date', actualPrice: 'Actual Price', notePlaceholder: 'Optional note...', btnAddHist: 'Add Record', modify: 'Edit Channel', confirmDelHist: 'Delete record?', opDate: 'Op Date', amount: 'Amount', period: 'Period', spendingDashboard: 'SPENDING DASHBOARD', monthlyBreakdown: 'MONTHLY BREAKDOWN', total: 'TOTAL', count: 'COUNT', growth: 'GROWTH', currMonth: 'CURRENT', itemDetails: 'ITEMS', noData: 'NO DATA', predictedTag: 'PREDICTED', lblPushTitle: 'Push Title', pushTitle: 'RenewHelper Report',
-        addChannel: 'Add Channel', noChannels: 'No channels. Add one!', modifyChannel: 'Edit Channel', channelType: 'Type', channelName: 'Name', selectChannels: 'Notification Channels (Leave empty for All)', delete: 'Delete'
+        tag: { alert: 'ALERT', renew: 'RENEWED', disable: 'DISABLED', normal: 'NORMAL' }, tagLatest: 'LATEST', tagAuto: 'AUTO', tagManual: 'MANUAL', msg: { confirmRenew: 'Renew [%s] to today based on your timezone?', renewSuccess: 'Renewed! Date updated: %s -> %t', tokenReset: 'Token Reset. Update your calendar apps.', copyOk: 'Link Copied', exportSuccess: 'Backup Downloaded', importSuccess: 'Restore Success, Refreshing...', importFail: 'Import Failed, Check File Format', passReq: 'Password Required', saved: 'Data Saved', saveFail: 'Save Failed', cleared: 'Cleared', clearFail: 'Clear Failed', loginFail: 'Access Denied', loadLogFail: 'Load Failed', confirmDel: 'Confirm Delete?', dateError: 'Last renew date cannot be earlier than create date', nameReq: 'Name Required', nameExist: 'Name already exists', futureError: 'Renew date cannot be in the future', serviceDisabled: 'Service Disabled', serviceEnabled: 'Service Enabled', execFinish: 'EXECUTION FINISHED!', rateFallback: 'Network Error. Used default rates.' }, tags: 'TAGS', tagPlaceholder: 'Press Enter to create tag', searchPlaceholder: 'Search...', tagsCol: 'TAGS', tagAll: 'ALL', useLunar: 'LUNAR', lunarTip: 'Calculate based on Lunar calendar', yes: 'Yes', no: 'No', timezone: 'Timezone', disabledFilter: 'DISABLED', policyConfig: 'Policy Config', policyNotify: 'NOTIFY DAYS', policyAuto: 'AUTO RENEW', policyRenewDay: 'RENEW DAYS', useGlobal: 'Global Default', autoRenewOnDesc: 'Auto Renew when overdue', autoRenewOffDesc: 'Auto Disable when overdue', previewCalc: 'Based on Last Renew Date & Interval', nextDue: 'NEXT DUE', typeRepeat: 'REPEAT',
+        fixedPrice: 'PRICE', currency: 'CURRENCY', defaultCurrency: 'DEFAULT CURRENCY', history: 'History', historyTitle: 'Renewal History', totalCost: 'Total Cost', totalCount: 'Total Count', renewDate: 'Op Date', billPeriod: 'Bill Period', startDate: 'Start Date', endDate: 'End Date', actualPrice: 'Actual Price', notePlaceholder: 'Optional note...', btnAddHist: 'Add Record', modify: 'Edit Channel', confirmDelHist: 'Delete record?', opDate: 'Op Date', amount: 'Amount', period: 'Period', spendingDashboard: 'SPENDING DASHBOARD', monthlyBreakdown: 'MONTHLY BREAKDOWN', total: 'TOTAL', count: 'COUNT', growth: 'GROWTH', currMonth: 'CURRENT', itemDetails: 'ITEMS', noData: 'NO DATA', predictedTag: 'PREDICTED', lblPushTitle: 'Push Title', pushTitle: 'RenewHelper Report',
+        addChannel: 'Add Channel', noChannels: 'No channels. Add one!', modifyChannel: 'Edit Channel', channelType: 'Type', channelName: 'Name', selectChannels: 'NOTIFICATION CHANNELS (Leave empty for All)', delete: 'Delete'
     }
 };
 const LUNAR = { info: [0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2, 0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977, 0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970, 0x06566, 0x0d4a0, 0x0ea50, 0x06e95, 0x05ad0, 0x02b60, 0x186e3, 0x092e0, 0x1c8d7, 0x0c950, 0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0, 0x092d0, 0x0d2b2, 0x0a950, 0x0b557, 0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5b0, 0x14573, 0x052b0, 0x0a9a8, 0x0e950, 0x06aa0, 0x0aea6, 0x0ab50, 0x04b60, 0x0aae4, 0x0a570, 0x05260, 0x0f263, 0x0d950, 0x05b57, 0x056a0, 0x096d0, 0x04dd5, 0x04ad0, 0x0a4d0, 0x0d4d4, 0x0d250, 0x0d558, 0x0b540, 0x0b6a0, 0x195a6, 0x095b0, 0x049b0, 0x0a974, 0x0a4b0, 0x0b27a, 0x06a50, 0x06d40, 0x0af46, 0x0ab60, 0x09570, 0x04af5, 0x04970, 0x064b0, 0x074a3, 0x0ea50, 0x06b58, 0x055c0, 0x0ab60, 0x096d5, 0x092e0, 0x0c960, 0x0d954, 0x0d4a0, 0x0da50, 0x07552, 0x056a0, 0x0abb7, 0x025d0, 0x092d0, 0x0cab5, 0x0a950, 0x0b4a0, 0x0baa4, 0x0ad50, 0x055d9, 0x04ba0, 0x0a5b0, 0x15176, 0x052b0, 0x0a930, 0x07954, 0x06aa0, 0x0ad50, 0x05b52, 0x04b60, 0x0a6e6, 0x0a4e0, 0x0d260, 0x0ea65, 0x0d530, 0x05aa0, 0x076a3, 0x096d0, 0x04bd7, 0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45, 0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0, 0x14b63, 0x09370, 0x049f8, 0x04970, 0x064b0, 0x168a6, 0x0ea50, 0x06b20, 0x1a6c4, 0x0aae0, 0x0a2e0, 0x0d2e3, 0x0c960, 0x0d557, 0x0d4a0, 0x0da50, 0x05d55, 0x056a0, 0x0a6d0, 0x055d4, 0x052d0, 0x0a9b8, 0x0a950, 0x0b4a0, 0x0b6a6, 0x0ad50, 0x055a0, 0x0aba4, 0x0a5b0, 0x052b0, 0x0b273, 0x06930, 0x07337, 0x06aa0, 0x0ad50, 0x14b55, 0x04b60, 0x0a570, 0x054e4, 0x0d160, 0x0e968, 0x0d520, 0x0daa0, 0x16aa6, 0x056d0, 0x04ae0, 0x0a9d4, 0x0a2d0, 0x0d150, 0x0f252, 0x0d520], gan: '甲乙丙丁戊己庚辛壬癸'.split(''), zhi: '子丑寅卯辰巳午未申酉戌亥'.split(''), months: '正二三四五六七八九十冬腊'.split(''), days: '初一,初二,初三,初四,初五,初六,初七,初八,初九,初十,十一,十二,十三,十四,十五,十六,十七,十八,十九,二十,廿一,廿二,廿三,廿四,廿五,廿六,廿七,廿八,廿九,三十'.split(','), lYearDays(y) { let s = 348; for (let i = 0x8000; i > 0x8; i >>= 1)s += (this.info[y - 1900] & i) ? 1 : 0; return s + this.leapDays(y) }, leapDays(y) { if (this.leapMonth(y)) return (this.info[y - 1900] & 0x10000) ? 30 : 29; return 0 }, leapMonth(y) { return this.info[y - 1900] & 0xf }, monthDays(y, m) { return (this.info[y - 1900] & (0x10000 >> m)) ? 30 : 29 }, solar2lunar(y, m, d) { if (y < 1900 || y > 2100) return null; const base = new Date(1900, 0, 31), obj = new Date(y, m - 1, d); let offset = Math.round((obj - base) / 86400000); let ly = 1900, temp = 0; for (; ly < 2101 && offset > 0; ly++) { temp = this.lYearDays(ly); offset -= temp } if (offset < 0) { offset += temp; ly-- } let lm = 1, leap = this.leapMonth(ly), isLeap = false; for (; lm < 13 && offset > 0; lm++) { if (leap > 0 && lm === (leap + 1) && !isLeap) { --lm; isLeap = true; temp = this.leapDays(ly) } else { temp = this.monthDays(ly, lm) } if (isLeap && lm === (leap + 1)) isLeap = false; offset -= temp } if (offset === 0 && leap > 0 && lm === leap + 1) { if (isLeap) isLeap = false; else { isLeap = true; --lm } } if (offset < 0) { offset += temp; --lm } const ld = offset + 1, gIdx = (ly - 4) % 10, zIdx = (ly - 4) % 12; const yStr = this.gan[gIdx < 0 ? gIdx + 10 : gIdx] + this.zhi[zIdx < 0 ? zIdx + 12 : zIdx]; const mStr = (isLeap ? '闰' : '') + this.months[lm - 1] + '月'; return { year: ly, month: lm, day: ld, isLeap, yearStr: yStr, monthStr: mStr, dayStr: this.days[ld - 1], fullStr: yStr + '年' + mStr + this.days[ld - 1] } } };
 
-// 本地时间解析函数，防止时区偏差
+// 本地时间解析函数，使用 UTC 模拟绝对日期，防止夏令时偏差
 const parseYMD = (s) => {
-    if (!s) return new Date();
+    if (!s) {
+        const tz = settings.value?.timezone || 'UTC';
+        const str = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+        const p = str.split('-');
+        return new Date(Date.UTC(p[0], p[1] - 1, p[2]));
+    }
     const p = s.split('-');
-    return new Date(p[0], p[1] - 1, p[2]);
+    return new Date(Date.UTC(p[0], p[1] - 1, p[2]));
+};
+const formatLocalYMD = (d) => {
+    if (!d) return '';
+    return d.toISOString().split('T')[0];
 };
 
 // Date calculation logic shared between validation and auto-fill
@@ -190,8 +211,9 @@ const calculateCycleEndDate = (startDateStr, item) => {
     if (!startDateStr || !item) return null;
     if (item.type === 'repeat' && item.repeat) {
         try {
-            const nextUTC = frontendCalc.calcNextRepeatDate(item.repeat, startDateStr, startDateStr);
-            if (nextUTC) return nextUTC.toISOString().split('T')[0];
+            // 【核心修复】：历史补录时，第 3 个参数必须传入真正的底层创建日(item.createDate)锚定。否则以补录日当日起算新周期会导致日期逻辑崩坍漂移。
+            const nextUTC = frontendCalc.calcNextRepeatDate(item.repeat, startDateStr, item.createDate || startDateStr);
+            if (nextUTC) return formatLocalYMD(nextUTC);
         } catch (e) { console.error('Repeat cycle error:', e); }
         return null;
     }
@@ -210,16 +232,14 @@ const calculateCycleEndDate = (startDateStr, item) => {
                 return nextDateUTC.toISOString().split('T')[0];
             }
         } else {
-            const start = new Date(startDateStr);
+            const startObj = parseYMD(startDateStr);
             const unit = item.cycleUnit || 'day';
             const interval = parseInt(item.intervalDays) || 1;
-            if (unit === 'year') start.setFullYear(start.getFullYear() + interval);
-            else if (unit === 'month') start.setMonth(start.getMonth() + interval);
-            else start.setDate(start.getDate() + interval);
-            const y = start.getFullYear();
-            const m = (start.getMonth() + 1).toString().padStart(2, '0');
-            const d = start.getDate().toString().padStart(2, '0');
-            return y + '-' + m + '-' + d;
+            let y = startObj.getUTCFullYear(), m = startObj.getUTCMonth(), d = startObj.getUTCDate();
+            if (unit === 'year') y += interval;
+            else if (unit === 'month') m += interval;
+            else d += interval;
+            return formatLocalYMD(new Date(Date.UTC(y, m, d)));
         }
     } catch (e) {
         console.error('Cycle calculation error:', e);
@@ -289,7 +309,7 @@ const calendarEvents = computed(() => {
             addEvent(item.nextDueDate, item, false);
         }
         // 3. 未来推算（从 nextDueDate 向后推到明年同月）
-        if (item.autoRenew && item.nextDueDate) {
+        if (showProjected.value && item.autoRenew && item.nextDueDate) {
             const isRepeat = item.type === 'repeat' && item.repeat;
             const unit = item.cycleUnit || 'day';
             const val = parseInt(item.intervalDays) || 1;
@@ -299,8 +319,7 @@ const calendarEvents = computed(() => {
                 let nextObj;
                 if (isRepeat) {
                     try {
-                        const advObj = new Date(cursor.getTime() + 86400000);
-                        const advStr = fmtDate(advObj);
+                        const advStr = fmtDate(cursor);
                         nextObj = frontendCalc.calcNextRepeatDate(item.repeat, advStr, item.createDate || item.lastRenewDate);
                         if (!nextObj) break;
                     } catch (e) { break; }
@@ -329,6 +348,7 @@ const getCalendarDayEvents = (date) => calendarEvents.value[formatDateKey(date)]
 const isCalendarToday = (date) => formatDateKey(date) === formatDateKey(new Date());
 const hoverIndex = ref(-1);
 const spendingMode = ref('op');
+const showProjected = ref(true);
 const selectedYear = ref('recent'); // 'recent' = last 12 months, or year number like 2024
 const selectedMonth = ref(null); // selected month key like '2026-01' for detail view
 const locale = ref(ZhCn), tableKey = ref(0), termRef = ref(null), submitting = ref(false);
@@ -698,10 +718,8 @@ const spendingStats = computed(() => {
                 let currentEndObj;
                 if (isRepeat) {
                     // Repeat 模式：用 calcNextRepeatDate 推算下一个周期
-                    // 注意：需将当前日期 +1 天传入，避免返回同日导致循环不前进
                     try {
-                        const advObj = new Date(nextStart.getTime() + 86400000);
-                        const advStr = advObj.getFullYear() + '-' + String(advObj.getMonth() + 1).padStart(2, '0') + '-' + String(advObj.getDate()).padStart(2, '0');
+                        const advStr = nextStart.getFullYear() + '-' + String(nextStart.getMonth() + 1).padStart(2, '0') + '-' + String(nextStart.getDate()).padStart(2, '0');
                         const nd = frontendCalc.calcNextRepeatDate(item.repeat, advStr, item.createDate || item.lastRenewDate);
                         if (nd) {
                             currentEndObj = nd;
@@ -1224,7 +1242,7 @@ const saveItem = async () => {
         if (form.value.type === 'repeat' && form.value.repeat) {
             try {
                 const nextUTC = frontendCalc.calcNextRepeatDate(form.value.repeat, startDate, form.value.createDate || startDate);
-                if (nextUTC) endDate = nextUTC.toISOString().split('T')[0];
+                if (nextUTC) endDate = formatLocalYMD(nextUTC);
             } catch (e) { console.error(e); }
         } else if (form.value.useLunar && typeof LUNAR !== 'undefined' && typeof frontendCalc !== 'undefined') {
             // 【修复】农历逻辑：先转为农历对象 -> 计算 -> 转回公历
@@ -1238,16 +1256,14 @@ const saveItem = async () => {
             }
         } else {
             // 公历：普通日期计算
-            const start = new Date(startDate);
+            const startObj = parseYMD(startDate);
             const unit = form.value.cycleUnit || 'day';
             const interval = Number(form.value.intervalDays) || 1;
-            if (unit === 'year') start.setFullYear(start.getFullYear() + interval);
-            else if (unit === 'month') start.setMonth(start.getMonth() + interval);
-            else start.setDate(start.getDate() + interval);
-            const y = start.getFullYear();
-            const m = (start.getMonth() + 1).toString().padStart(2, '0');
-            const d = start.getDate().toString().padStart(2, '0');
-            endDate = y + '-' + m + '-' + d;
+            let y = startObj.getUTCFullYear(), m = startObj.getUTCMonth(), d = startObj.getUTCDate();
+            if (unit === 'year') y += interval;
+            else if (unit === 'month') m += interval;
+            else d += interval;
+            endDate = formatLocalYMD(new Date(Date.UTC(y, m, d)));
         }
 
         // 使用 startDate(即 lastRenewDate) 的 0点作为操作时间
@@ -1300,6 +1316,115 @@ const confirmRenew = (row) => {
         manualRenew(row);
     }).catch(() => { });
 };
+
+// === 批量操作状态与逻辑 ===
+const listTableRef = ref(null);
+const selectedListItems = ref([]);
+watch(currentView, (newVal) => {
+    if (newVal === 'project' && selectedListItems.value.length > 0) {
+        const savedSelection = [...selectedListItems.value];
+        nextTick(() => {
+            if (listTableRef.value) {
+                savedSelection.forEach(row => {
+                    // 由于 pagedList 可能跨页，这里最好在一级 list 或当前 pagedList 查找。若原生保留生效，则 toggle 即可。
+                    const targetRow = list.value.find(r => r.id === row.id);
+                    if (targetRow) {
+                        listTableRef.value.toggleRowSelection(targetRow, true);
+                    }
+                });
+            }
+        });
+    }
+});
+const handleListSelectionChange = (val) => {
+    selectedListItems.value = val;
+};
+const inverseListSelection = () => {
+    if (!listTableRef.value) return;
+    const currentSelectedIds = new Set(selectedListItems.value.map(item => item.id));
+    pagedList.value.forEach(row => {
+        listTableRef.value.toggleRowSelection(row, !currentSelectedIds.has(row.id));
+    });
+};
+
+// 批量删除
+const batchDeleteItems = () => {
+    if (selectedListItems.value.length === 0) return;
+    ElMessageBox.confirm(
+        lang.value === 'zh' ? `确定要删除选中的 ${selectedListItems.value.length} 个服务吗？` : `Delete selected ${selectedListItems.value.length} services?`,
+        t('tipDelete'),
+        { confirmButtonText: t('yes'), cancelButtonText: t('no'), type: 'danger' }
+    ).then(async () => {
+        try {
+            submitting.value = true;
+            const idsToDelete = selectedListItems.value.map(i => i.id);
+            list.value = list.value.filter(i => !idsToDelete.includes(i.id));
+            await saveData();
+            selectedListItems.value = [];
+        } catch (e) {
+            ElMessage.error(e.message || 'Delete failed');
+        } finally {
+            submitting.value = false;
+        }
+    }).catch(() => { });
+};
+
+// 批量切换在线状态
+const batchToggleEnable = async (enableStatus) => {
+    if (selectedListItems.value.length === 0) return;
+    try {
+        submitting.value = true;
+        const idsToUpdate = selectedListItems.value.map(i => i.id);
+        list.value = list.value.map(i => {
+            if (idsToUpdate.includes(i.id)) i.enabled = enableStatus;
+            return i;
+        });
+        await saveData();
+    } catch (e) {
+        ElMessage.error(e.message || 'Update failed');
+    } finally {
+        submitting.value = false;
+    }
+};
+
+// 批量设置通知渠道状态
+const listBatchAssignDialogVisible = ref(false);
+const listBatchAssignForm = ref({ channels: [], strategy: 'append' });
+const openListBatchAssign = () => {
+    if (selectedListItems.value.length === 0) return;
+    listBatchAssignForm.value = { channels: [], strategy: 'append' };
+    listBatchAssignDialogVisible.value = true;
+};
+const submitListBatchAssign = async () => {
+    try {
+        submitting.value = true;
+        const idsToUpdate = selectedListItems.value.map(i => i.id);
+        const st = listBatchAssignForm.value.strategy;
+        const targetChans = listBatchAssignForm.value.channels || [];
+
+        list.value = list.value.map(i => {
+            if (idsToUpdate.includes(i.id)) {
+                let current = Array.isArray(i.notifyChannelIds) ? [...i.notifyChannelIds] : [];
+                if (st === 'append') {
+                    const merged = new Set([...current, ...targetChans]);
+                    i.notifyChannelIds = Array.from(merged);
+                } else if (st === 'overwrite') {
+                    i.notifyChannelIds = [...targetChans];
+                } else if (st === 'remove') {
+                    i.notifyChannelIds = current.filter(c => !targetChans.includes(c));
+                }
+            }
+            return i;
+        });
+        await saveData();
+        listBatchAssignDialogVisible.value = false;
+    } catch (e) {
+        ElMessage.error(e.message || 'Assign failed');
+    } finally {
+        submitting.value = false;
+    }
+};
+// === //
 
 const logVisible = ref(false);
 const runCheck = async () => {
@@ -1397,12 +1522,15 @@ const getRepeatDesc = (r) => {
         constraints.push(isZh ? mStr : `in ${mStr}`);
     }
 
-    // 3. 指定日期
-    if (['monthly', 'yearly'].includes(r.freq) && r.bymonthday && r.bymonthday.length > 0) {
-        const dStr = r.bymonthday.map(d => Number(d) < 0 ? dict.lastDayPattern(Number(d)) : d + dict.daySuffix).join('、');
-        let enStr = `on ${dStr}`;
-        if (!r.bymonthday.some(d => Number(d) < 0)) enStr = `on the ${dStr}`;
-        constraints.push(isZh ? `的 ${dStr}` : enStr);
+    // 3. daily: bycycleday / monthly+yearly: bymonthday
+    if (r.freq === 'daily' && r.bycycleday && r.bycycleday.length > 0) {
+        const dStr = r.bycycleday.map(d => isZh ? '第' + d + '天' : 'Day ' + d).join(isZh ? '、' : ', ');
+        constraints.push(isZh ? ('的' + dStr) : ('on ' + dStr));
+    } else if (['monthly', 'yearly'].includes(r.freq) && r.bymonthday && r.bymonthday.length > 0) {
+        const dStr = r.bymonthday.map(d => Number(d) < 0 ? dict.lastDayPattern(Number(d)) : d + dict.daySuffix).join(', ');
+        let enStr = 'on ' + dStr;
+        if (!r.bymonthday.some(d => Number(d) < 0)) enStr = 'on the ' + dStr;
+        constraints.push(isZh ? ('的 ' + dStr) : enStr);
     }
 
     // 4. 指定星期
@@ -1437,39 +1565,47 @@ const repeatDescription = computed(() => {
 
 // 预计到期日（独立 computed，用于模板中另起一行展示）
 const repeatUpcomingDates = computed(() => {
-    if (form.value.type !== 'repeat' || !form.value.repeat) return '';
+    if (form.value.type !== 'repeat' || !form.value.repeat) return null;
     const r = form.value.repeat;
-    const isZh = lang.value === 'zh';
     try {
         let upcoming = [];
         let curBase = getLocalToday();
         if (form.value.lastRenewDate) curBase = form.value.lastRenewDate;
-        let pointerDate = curBase;
-        for (let i = 0; i < 4; i++) {
+        
+        // 【核心修复】：为确保规则预览能够包含起始计算日(curBase)自身(如: 第1天)，
+        // 我们将检测起始指针临时向前拨动1天，利用后层逻辑的严格大于(> baseObj)顺势命中自身。
+        let pObj = parseYMD(curBase);
+        pObj.setUTCDate(pObj.getUTCDate() - 1);
+        let pointerDate = formatLocalYMD(pObj);
+
+        for (let i = 0; i < 10; i++) {
             const nd = frontendCalc.calcNextRepeatDate(r, pointerDate, form.value.createDate || curBase);
             if (nd) {
-                const ds = nd.toISOString().split('T')[0];
+                const ds = formatLocalYMD(nd);
                 upcoming.push(ds);
-                const nextDayObj = new Date(nd.getTime() + 86400000);
-                pointerDate = nextDayObj.toISOString().split('T')[0];
+                // 由于推算逻辑使用严格大于 > pointerDate, 
+                // 次圈无需人为+1天，传入最新算出的该天字符串即可防止跳日BUG
+                pointerDate = ds;
             } else {
                 break;
             }
         }
         if (upcoming.length > 0) {
-            const showDots = upcoming.length > 3;
-            const showList = showDots ? upcoming.slice(0, 3) : upcoming;
-            return showList.join(', ') + (showDots ? '...' : '');
+            return {
+                summary: upcoming.slice(0, 3).join(', ') + (upcoming.length > 3 ? '...' : ''),
+                full: upcoming.join('\n')
+            };
         }
     } catch(e) { /* 计算异常 */ }
-    return '__NO_MATCH__';
+    return null;
 });
-const openAdd = () => { isEdit.value = false; const d = getLocalToday(); form.value = { id: Date.now().toString(), name: '', createDate: d, lastRenewDate: d, intervalDays: 30, cycleUnit: 'day', type: 'cycle', enabled: true, tags: [], useLunar: false, notifyDays: 3, notifyTime: ['08:00'], autoRenew: true, autoRenewDays: 3, fixedPrice: 0, currency: settings.value.defaultCurrency || 'CNY', notifyChannelIds: [], renewHistory: [], repeat: { freq: 'monthly', interval: 1, bymonth: [], bymonthday: [], byweekday: [], bysetpos: null } }; dialogVisible.value = true; };
+const openAdd = () => { isEdit.value = false; const d = getLocalToday(); form.value = { id: Date.now().toString(), name: '', createDate: d, lastRenewDate: d, intervalDays: 30, cycleUnit: 'day', type: 'cycle', enabled: true, tags: [], useLunar: false, notifyDays: 3, notifyTime: ['08:00'], autoRenew: true, autoRenewDays: 3, fixedPrice: 0, currency: settings.value.defaultCurrency || 'CNY', notifyChannelIds: [], renewHistory: [], repeat: { freq: 'monthly', interval: 1, bymonth: [], bymonthday: [], byweekday: [], bysetpos: null, bycycleday: [] } }; dialogVisible.value = true; };
 const editItem = (row) => { 
     isEdit.value = true; 
-    let rObj = row.repeat ? JSON.parse(JSON.stringify(row.repeat)) : { freq: 'monthly', interval: 1, bymonth: [], bymonthday: [], byweekday: [], bysetpos: null };
+    let rObj = row.repeat ? JSON.parse(JSON.stringify(row.repeat)) : { freq: 'monthly', interval: 1, bymonth: [], bymonthday: [], byweekday: [], bysetpos: null, bycycleday: [] };
     if (rObj.bymonthday && Array.isArray(rObj.bymonthday)) rObj.bymonthday = rObj.bymonthday.map(String);
     if (rObj.bysetpos !== null && rObj.bysetpos !== undefined) rObj.bysetpos = String(rObj.bysetpos);
+    if (!rObj.bycycleday) rObj.bycycleday = [];
     form.value = { ...row, cycleUnit: row.cycleUnit || 'day', tags: [...(row.tags || [])], useLunar: !!row.useLunar, notifyDays: (row.notifyDays !== undefined ? row.notifyDays : 3), notifyTime: normalizeNotifyTime(row.notifyTimes || row.notifyTime), autoRenew: row.autoRenew !== false, autoRenewDays: (row.autoRenewDays !== undefined ? row.autoRenewDays : 3), notifyChannelIds: (Array.isArray(row.notifyChannelIds) ? row.notifyChannelIds : []), repeat: rObj }; 
     dialogVisible.value = true; 
 };
@@ -2296,7 +2432,7 @@ const getSummaries = (param) => {
     const rates = exchangeRates.value || {};
 
     columns.forEach((column, index) => {
-        if (index === 0) {
+        if (index === 1) {
             sums[index] = t('totalCost');
             return;
         }
@@ -2709,13 +2845,13 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                                 :class="['flex-1 px-2 py-1.5 rounded text-[11px] font-mono font-bold transition-all text-center cursor-pointer leading-tight', currentView === 'project' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white']">
                                 {{ t('viewProjects') }}
                             </button>
-                            <button @click="currentView = 'spending'"
-                                :class="['flex-1 px-2 py-1.5 rounded text-[11px] font-mono font-bold transition-all text-center cursor-pointer leading-tight', currentView === 'spending' ? 'bg-cyan-600 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white']">
-                                {{ t('viewSpending') }}
-                            </button>
                             <button @click="currentView = 'calendar'"
-                                :class="['flex-1 px-2 py-1.5 rounded text-[11px] font-mono font-bold transition-all text-center cursor-pointer leading-tight', currentView === 'calendar' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white']">
+                                :class="['flex-1 px-2 py-1.5 rounded text-[11px] font-mono font-bold transition-all text-center cursor-pointer leading-tight', currentView === 'calendar' ? 'bg-cyan-600 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white']">
                                 {{ t('viewCalendar') }}
+                            </button>
+                            <button @click="currentView = 'spending'"
+                                :class="['flex-1 px-2 py-1.5 rounded text-[11px] font-mono font-bold transition-all text-center cursor-pointer leading-tight', currentView === 'spending' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white']">
+                                {{ t('viewSpending') }}
                             </button>
                         </div>
                     </div>
@@ -2723,7 +2859,7 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
 
                 <!-- Project View -->
                 <template v-if="currentView === 'project'">
-
+                  <div class="fade-in-animate">
                     <div class="filter-row" v-if="list.length > 0">
                         <div class="search-box"><el-input v-model="searchKeyword" :placeholder="t('searchPlaceholder')"
                                 clearable :prefix-icon="Search"></el-input></div>
@@ -2782,10 +2918,38 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                         </div>
                     </div>
                     <div class="mecha-panel p-1 !border-l-0">
-                        <el-table :key="tableKey" :data="pagedList" style="width:100%" v-loading="loading"
+                        <!-- 批量操作控制栏 -->
+                        <div v-if="selectedListItems.length > 0" class="flex flex-wrap items-center justify-between bg-blue-50 dark:bg-slate-800 p-3 border-b border-blue-100 dark:border-slate-700">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-bold text-blue-600 mr-2 flex items-center">
+                                    <el-icon class="mr-1"><Checked /></el-icon>
+                                    {{ lang === 'zh' ? `已选择 ${selectedListItems.length} 项:` : `Selected ${selectedListItems.length}:` }}
+                                </span>
+                                <el-button size="small" type="info" plain @click="inverseListSelection">
+                                    {{ lang === 'zh' ? '反选' : 'Inverse' }}
+                                </el-button>                               
+                                <el-button size="small" type="success" plain @click="batchToggleEnable(true)" :loading="submitting">
+                                    {{ lang === 'zh' ? '批量启用' : 'Enable' }}
+                                </el-button>
+                                <el-button size="small" type="warning" plain @click="batchToggleEnable(false)" :loading="submitting">
+                                    {{ lang === 'zh' ? '批量暂停' : 'Disable' }}
+                                </el-button>
+                                <el-button size="small" type="primary" plain @click="openListBatchAssign">
+                                    {{ lang === 'zh' ? '分配渠道' : 'Assign Channels' }}
+                                </el-button>
+                            </div>
+                            <div>
+                                <el-button size="small" type="danger" @click="batchDeleteItems" :loading="submitting">
+                                    {{ lang === 'zh' ? '批量删除' : 'Delete All' }}
+                                </el-button>
+                            </div>
+                        </div>
+
+                        <el-table :key="tableKey" ref="listTableRef" :data="pagedList" style="width:100%" v-loading="loading"
                             :row-class-name="tableRowClassName" size="large" @sort-change="handleSortChange"
-                            @filter-change="handleFilterChange" :default-sort="{ prop: 'daysLeft', order: 'ascending' }"
-                            show-summary :summary-method="getSummaries">
+                            @filter-change="handleFilterChange" @selection-change="handleListSelectionChange" :default-sort="{ prop: 'daysLeft', order: 'ascending' }"
+                            show-summary :summary-method="getSummaries" row-key="id">
+                            <el-table-column type="selection" width="50" align="center" reserve-selection />
                             <el-table-column :label="t('serviceName')" min-width="230">
                                 <template #default="scope">
                                     <div class="flex items-center gap-4">
@@ -2804,7 +2968,7 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                                 </template>
                             </el-table-column>
 
-                            <el-table-column :label="t('tagsCol')" min-width="120">
+                            <el-table-column :label="t('tagsCol')" min-width="80">
                                 <template #default="scope">
                                     <div class="tag-container"><span v-for="tag in scope.row.tags" :key="tag"
                                             class="tag-compact">{{ tag }}</span></div>
@@ -2884,7 +3048,7 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                                 </template>
                             </el-table-column>
 
-                            <el-table-column :label="t('cyclePeriod')" width="90">
+                            <el-table-column :label="t('cyclePeriod')" width="80">
                                 <template #default="scope">
                                     <template v-if="scope.row.type === 'repeat' && scope.row.repeat">
                                         <span class="font-mono font-bold text-lg text-textDim tracking-tighter">{{ scope.row.repeat.interval > 1 ? scope.row.repeat.interval : '1' }}</span>
@@ -2980,13 +3144,13 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                                 @current-change="() => window.scrollTo({ top: 0, behavior: 'smooth' })" />
                         </div>
                     </div>
-
+                  </div>
                 </template>
                 <!-- End Project View -->
 
                 <!-- Spending View -->
                 <template v-else-if="currentView === 'spending'">
-                    <div class="spending-dashboard animate-fade-in" v-if="spendingStats.hasData">
+                    <div class="spending-dashboard fade-in-animate" v-if="spendingStats.hasData">
                         <!-- Header & Toggle -->
                         <div class="flex justify-between items-center mb-6">
                             <el-popover placement="bottom-start" :width="320" trigger="click"
@@ -3401,7 +3565,7 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                                 </div>
                             </div>
                         </div>
-                        <div v-else class="mecha-panel p-12 text-center animate-fade-in">
+                        <div v-else class="mecha-panel p-12 text-center fade-in-animate">
                             <div class="text-gray-500 dark:text-gray-400 font-mono text-lg">{{ t('noSpendingData') }}
                             </div>
                         </div>
@@ -3411,7 +3575,7 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
 
                 <!-- Calendar View -->
                 <template v-else>
-                    <div class="animate-fade-in calendar-view-container">
+                    <div class="fade-in-animate calendar-view-container">
                         <el-calendar ref="calendarRef" v-model="calendarDate">
                             <!-- 自定义头部：年/月下拉 + 前后翻页 + 今天按钮 -->
                             <template #header="{ date }">
@@ -3429,6 +3593,10 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                                         </el-select>
                                     </div>
                                     <div class="flex items-center gap-2">
+                                        <div class="flex items-center gap-2 mr-1">
+                                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">{{ lang === 'zh' ? '开启预测账单' : 'Show Predictions' }}</span>
+                                            <el-switch v-model="showProjected" size="small" />
+                                        </div>
                                         <el-button-group>
                                             <el-button size="small" @click="calendarRef?.selectDate('prev-year')" class="!font-mono !text-xs">{{ lang === 'zh' ? '上一年' : 'Prev Year' }}</el-button>
                                             <el-button size="small" @click="calendarRef?.selectDate('prev-month')" class="!font-mono !text-xs">{{ lang === 'zh' ? '上个月' : 'Prev Month' }}</el-button>
@@ -3532,7 +3700,16 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                 align-center class="!rounded-none mecha-panel"
                 style="clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);">
                 <el-form :model="form" label-position="top">
-                    <el-form-item :label="t('formName')"><el-input v-model="form.name" size="large"><template
+                    <el-form-item>
+                        <template #label>
+                            <div class="flex items-center gap-1">
+                                <span>{{ t('formName') }}</span>
+                                <el-tooltip :content="lang === 'zh' ? '填写服务的名称标识以供识别，为必填项。' : 'Identifier of the service, required.'" placement="top">
+                                    <span class="text-red-500 cursor-help font-bold">*</span>
+                                </el-tooltip>
+                            </div>
+                        </template>
+                        <el-input v-model="form.name" size="large"><template
                                 #prefix><el-icon>
                                     <Monitor />
                                 </el-icon></template></el-input></el-form-item>
@@ -3564,7 +3741,7 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
 
                     <!-- 第一行：模式标签 + 选择按钮同行 -->
                     <div class="flex items-center gap-3 mb-4">
-                        <span class="text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">{{ t('formType') }}</span>
+                        <span class="text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap flex items-center gap-1">{{ t('formType') }}<el-tooltip :content="lang === 'zh' ? '选择服务的计费模式：循环订阅、到期重置或固定重复，为必填项。' : 'Select the billing mode: Cycle, Reset or Repeat, required.'" placement="top"><span class="text-red-500 cursor-help font-bold">*</span></el-tooltip></span>
                         <div class="radio-group-fix flex-1"
                             :style="{ opacity: isEdit ? 0.6 : 1, pointerEvents: isEdit ? 'none' : 'auto' }">
                             <div class="radio-item" :class="{ active: form.type === 'cycle' }"
@@ -3577,7 +3754,15 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                     </div>
                     <!-- 第二行：周期时长 + 农历开关 -->
                     <div class="flex items-end gap-4 mb-4" v-show="form.type !== 'repeat'">
-                        <el-form-item :label="t('interval')" class="!mb-0 flex-1">
+                        <el-form-item class="!mb-0 flex-1">
+                            <template #label>
+                                <div class="flex items-center gap-1">
+                                    <span>{{ t('interval') }}</span>
+                                    <el-tooltip :content="lang === 'zh' ? '服务每次续订的固定时长，为必填项。' : 'Duration of each subscription period, required.'" placement="top">
+                                        <span class="text-red-500 cursor-help font-bold">*</span>
+                                    </el-tooltip>
+                                </div>
+                            </template>
                             <el-input v-model.number="form.intervalDays" type="number" :min="1" :disabled="isEdit">
                                 <template #append>
                                     <el-select v-model="form.cycleUnit" style="width:80px" :teleported="false"
@@ -3597,9 +3782,18 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                     <div v-if="form.type === 'repeat' && form.repeat" class="p-4 mb-4 rounded-md border border-blue-200 bg-blue-50/50 dark:bg-slate-800/80 dark:border-slate-700 shadow-sm transition-all">
                         <div class="flex items-center gap-2 font-bold text-sm text-blue-800 dark:text-blue-300 mb-4 pb-2 border-b border-blue-100 dark:border-slate-700">
                             <el-icon><Calendar /></el-icon>{{ lang === 'zh' ? '定期重复配置' : 'Recurrence Settings' }}
+                            <el-tooltip :content="lang === 'zh' ? '配置重复规则，至少需要设定频率，为必填项。' : 'Configure the recurrence rule. Frequency is required.'" placement="top"><span class="text-red-500 cursor-help font-bold">*</span></el-tooltip>
                         </div>
                         <div class="mb-4">
-                            <el-form-item :label="lang === 'zh' ? '重复频率' : 'Repeat Every'" class="!mb-0 w-full">
+                            <el-form-item class="!mb-0 w-full">
+                                <template #label>
+                                    <div class="flex items-center gap-1">
+                                        <span>{{ lang === 'zh' ? '重复频率' : 'Repeat Every' }}</span>
+                                        <el-tooltip :content="lang === 'zh' ? '设置重复的间隔和周期类型（日/周/月/年），为必填项。' : 'Set the interval and period type (Daily/Weekly/Monthly/Yearly), required.'" placement="top">
+                                            <span class="text-red-500 cursor-help font-bold">*</span>
+                                        </el-tooltip>
+                                    </div>
+                                </template>
                                 <div class="flex items-center gap-2 w-full">
                                     <span class="text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">{{ lang === 'zh' ? '每' : 'Every' }}</span>
                                     <el-input-number v-model="form.repeat.interval" :min="1" controls-position="right" class="!w-24" :disabled="isEdit" />
@@ -3622,9 +3816,26 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                             </el-form-item>
                         </div>
                         
-                        <!-- 每月或每年可选定触点日 -->
+                        <!-- Daily: 指定触发天数 -->
+                        <div v-if="form.repeat.freq === 'daily' && form.repeat.interval > 1" class="mb-4">
+                            <el-form-item class="!mb-0 w-full">
+                                <template #label>
+                                    <div class="flex items-center gap-1">
+                                        <span>{{ lang === 'zh' ? '指定触发天数' : 'TRIGGER DAYS' }}</span>
+                                        <el-tooltip :content="lang === 'zh' ? '在每个周期内的第几天触发。第1天 = 周期起始日当天。例如每5天中选第3天和第5天，则在周期的第3天和最后一天触发。' : 'Which day in each cycle to trigger. Day 1 = cycle start. E.g. for Every 5 days, select Day 3 and Day 5.'" placement="top">
+                                            <span class="text-amber-500 cursor-help">&#9432;</span>
+                                        </el-tooltip>
+                                    </div>
+                                </template>
+                                <el-select v-model="form.repeat.bycycleday" multiple clearable collapse-tags :max-collapse-tags="5" :placeholder="lang === 'zh' ? '可选，选择周期中的第几天' : 'Optional, select which day in cycle'" style="width:100%" filterable allow-create default-first-option :disabled="isEdit">
+                                    <el-option v-for="d in form.repeat.interval" :key="'cd'+d" :label="lang === 'zh' ? '第' + d + '天' : 'Day ' + d" :value="d"></el-option>
+                                </el-select>
+                            </el-form-item>
+                        </div>
+
+                        <!-- monthly/yearly: 指定日期 -->
                         <div v-if="['monthly', 'yearly'].includes(form.repeat.freq)" class="mb-4">
-                            <el-form-item :label="lang === 'zh' ? '指定日期' : 'By Month Day'" class="!mb-0 w-full">
+                            <el-form-item :label="lang === 'zh' ? '指定日期' : 'BY DAY'" class="!mb-0 w-full">
                                 <el-select v-model="form.repeat.bymonthday" multiple clearable collapse-tags :max-collapse-tags="5" :placeholder="lang === 'zh' ? '默认为开始日，如输入 -1 代表最后一天' : 'Start Day Default, e.g. -1 for Last Day'" style="width:100%" filterable allow-create default-first-option :disabled="isEdit">
                                     <el-option v-for="d in 31" :key="'d'+d" :label="d + (lang === 'zh' ? '日':'')" :value="String(d)"></el-option>
                                     <el-option :label="lang === 'zh' ? '倒数第1天 (-1)' : 'Last Day (-1)'" :value="'-1'"></el-option>
@@ -3674,12 +3885,17 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                             </div>
                             <div v-if="repeatUpcomingDates" class="flex items-center">
                                 <el-icon class="text-indigo-400 mr-2 text-lg shrink-0"><Calendar /></el-icon>
-                                <span v-if="repeatUpcomingDates === '__NO_MATCH__'" class="text-sm font-bold text-orange-500">
-                                    {{ lang === 'zh' ? '⚠ 找不到对应日期' : '⚠ No matching dates found' }}
-                                </span>
-                                <span v-else class="text-sm font-medium text-indigo-800 dark:text-indigo-400">
+                                <span class="text-sm font-medium text-indigo-800 dark:text-indigo-400">
                                     {{ lang === 'zh' ? '预计到期：' : 'Expected: ' }}
-                                    <span class="font-bold font-mono">{{ repeatUpcomingDates }}</span>
+                                    <el-tooltip effect="dark" placement="top">
+                                        <template #content>
+                                            <div>
+                                                <div style="font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 4px;">{{ lang === 'zh' ? '未来 10 次到期建议：' : 'Next 10 Occurrences:' }}</div>
+                                                <div style="white-space: pre-wrap; line-height: 1.6;" v-text="repeatUpcomingDates.full"></div>
+                                            </div>
+                                        </template>
+                                        <span class="font-bold font-mono cursor-help border-b border-dashed border-indigo-400 dark:border-indigo-600">{{ repeatUpcomingDates.summary }}</span>
+                                    </el-tooltip>
                                 </span>
                             </div>
                         </div>
@@ -3688,10 +3904,18 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <el-form-item class="!mb-0">
                             <template #label>
-                                <div class="flex items-center gap-2"><span>{{ t('createDate') }}</span><span
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-1">
+                                        <span>{{ t('createDate') }}</span>
+                                        <el-tooltip :content="lang === 'zh' ? '首次购买/创建该服务的日期，为必填项。' : 'Original purchase/creation date, required.'" placement="top">
+                                            <span class="text-red-500 cursor-help font-bold">*</span>
+                                        </el-tooltip>
+                                    </div>
+                                    <span
                                         v-if="form.useLunar && form.createDate"
                                         class="text-[12px] font-bold text-purple-600 font-mono ml-1">{{
-                                            getLunarStr(form.createDate).replace('农历: ', '') }}</span></div>
+                                            getLunarStr(form.createDate).replace('农历: ', '') }}</span>
+                                </div>
                             </template>
                             <el-date-picker v-if="form.useLunar" v-model="form.createDate" type="date"
                                 value-format="YYYY-MM-DD" style="width:100%" class="!w-full" :disabled="isEdit"
@@ -3718,10 +3942,18 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                         </el-form-item>
                         <el-form-item class="!mb-0">
                             <template #label>
-                                <div class="flex items-center gap-2"><span>{{ t('lastRenew') }}</span><span
+                                <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-1">
+                                        <span>{{ t('lastRenew') }}</span>
+                                        <el-tooltip :content="lang === 'zh' ? '最近一次完成续费的日期，系统将以此为基准推算下一次到期日期，为必填项。' : 'The date of the most recent renewal, required.'" placement="top">
+                                            <span class="text-red-500 cursor-help font-bold">*</span>
+                                        </el-tooltip>
+                                    </div>
+                                    <span
                                         v-if="form.useLunar && form.lastRenewDate"
                                         class="text-[12px] font-bold text-purple-600 font-mono ml-1">{{
-                                            getLunarStr(form.lastRenewDate).replace('农历: ', '') }}</span></div>
+                                            getLunarStr(form.lastRenewDate).replace('农历: ', '') }}</span>
+                                </div>
                             </template>
                             <el-date-picker v-if="form.useLunar" v-model="form.lastRenewDate" type="date"
                                 value-format="YYYY-MM-DD" style="width:100%" class="!w-full" popper-class="lunar-popper"
@@ -3777,7 +4009,15 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
 
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4 border-t border-slate-100 pt-4">
-                        <el-form-item :label="t('policyNotify')" class="!mb-0">
+                        <el-form-item class="!mb-0">
+                            <template #label>
+                                <div class="flex items-center gap-1">
+                                    <span>{{ t('policyNotify') }}</span>
+                                    <el-tooltip :content="lang === 'zh' ? '距到期多少天时开始发送提醒通知，为必须数值。' : 'Days before expiration to start alerting, required.'" placement="top">
+                                        <span class="text-red-500 cursor-help font-bold">*</span>
+                                    </el-tooltip>
+                                </div>
+                            </template>
                             <div class="flex gap-2 w-full">
                                 <el-input-number v-model="form.notifyDays" :min="0" controls-position="right"
                                     class="!w-24"></el-input-number>
@@ -4632,7 +4872,12 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                 <el-form :model="assignForm" label-position="top">
                     <el-form-item :label="lang === 'zh' ? '选择目标服务' : 'Target Services'">
                         <el-select v-model="assignForm.serviceIds" multiple filterable clearable collapse-tags :max-collapse-tags="3" collapse-tags-tooltip style="width:100%" :placeholder="lang === 'zh' ? '搜索并选择服务...' : 'Search & select services...'">
-                            <el-option v-for="item in list" :key="item.id" :label="item.name" :value="item.id"></el-option>
+                            <el-option v-for="item in list" :key="item.id" :label="item.name" :value="item.id">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full" :class="item.enabled ? 'bg-green-500' : 'bg-gray-300'"></span>
+                                    <span>{{ item.name }}</span>
+                                </div>
+                            </el-option>
                         </el-select>
                     </el-form-item>
                     <el-form-item :label="lang === 'zh' ? '分配策略' : 'Assignment Strategy'">
@@ -4648,6 +4893,40 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
                     <el-button type="primary" @click="submitAssign">{{ t('save') }}</el-button>
                 </template>
             </el-dialog>
+
+            <!-- 批量分配列表通知渠道的弹窗 -->
+            <el-dialog v-model="listBatchAssignDialogVisible" :title="lang === 'zh' ? '批量分配通知渠道' : 'Batch Assign Channels'" width="680px" align-center class="!rounded-none mecha-panel" style="clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);">
+                <div class="mb-4">
+                    <div class="text-xs font-bold text-gray-500 mb-2">{{ lang === 'zh' ? '分配策略' : 'Strategy' }}</div>
+                    <el-radio-group v-model="listBatchAssignForm.strategy">
+                        <el-radio label="append">{{ lang === 'zh' ? '追加 (保留原有)' : 'Append' }}</el-radio>
+                        <el-radio label="overwrite">{{ lang === 'zh' ? '覆盖 (替换原有)' : 'Overwrite' }}</el-radio>
+                        <el-radio label="remove">{{ lang === 'zh' ? '移除 (取消选中渠道)' : 'Remove' }}</el-radio>
+                    </el-radio-group>
+                </div>
+                <div class="mb-2">
+                    <div class="text-xs font-bold text-gray-500 mb-2">{{ lang === 'zh' ? '选择通知渠道' : 'Select Channels' }}</div>
+                    <el-select v-model="listBatchAssignForm.channels" multiple collapse-tags placeholder="Select channels" style="width: 100%">
+                        <el-option v-for="ch in settings.channels || []" :key="ch.id" :label="ch.name" :value="ch.id">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full" :class="ch.enable ? 'bg-green-500' : 'bg-gray-300'"></span>
+                                <span>{{ ch.name }}</span>
+                                <span class="text-xs text-gray-400 ml-auto">{{ ch.type }}</span>
+                            </div>
+                        </el-option>
+                    </el-select>
+                </div>
+                <div class="text-xs text-blue-500 mt-2 bg-blue-50 dark:bg-slate-800 p-2 rounded">
+                    {{ lang === 'zh' ? `将对选中的 ${selectedListItems.length} 个服务应用此规则` : `Will apply to ${selectedListItems.length} selected services` }}
+                </div>
+                <template #footer>
+                    <div class="flex justify-end gap-2">
+                        <el-button @click="listBatchAssignDialogVisible = false" class="mecha-btn">{{ t('cancel') }}</el-button>
+                        <el-button type="primary" :loading="submitting" @click="submitListBatchAssign" class="mecha-btn !bg-blue-600 !text-white">{{ t('save') }}</el-button>
+                    </div>
+                </template>
+            </el-dialog>
+
         </el-config-provider>
     </div>
 </template>
@@ -4806,14 +5085,14 @@ const openLink = (url) => { if (url) window.open(url, '_blank'); };
 .cal-day-cell.is-today-cell .cal-day-num {
     color: var(--el-color-primary);
     background: var(--el-color-primary-light-8);
-    border-radius: 50%;
+}
+.cal-day-num {
     width: 26px;
     height: 26px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-.cal-day-num {
     font-size: 16px;
     font-weight: 700;
     font-family: ui-monospace, SFMono-Regular, monospace;

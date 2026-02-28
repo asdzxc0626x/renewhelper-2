@@ -669,7 +669,18 @@ const Calc = {
                     if (!byweekday || byweekday.includes(curr.getUTCDay())) candidates.push(curr);
                 }
             } else if (freq === 'daily') {
-                candidates.push(new Date(Date.UTC(y, m, d + periods * interval)));
+                let bycycleday = Array.isArray(repeat.bycycleday) ? repeat.bycycleday : (repeat.bycycleday ? [repeat.bycycleday] : null);
+                if (bycycleday && bycycleday.length > 0) {
+                    let cycleStart = new Date(Date.UTC(y, m, d + periods * interval));
+                    for (let bd of bycycleday) {
+                        let dayOffset = Number(bd) - 1;
+                        if (dayOffset >= 0 && dayOffset < interval) {
+                            candidates.push(new Date(Date.UTC(cycleStart.getUTCFullYear(), cycleStart.getUTCMonth(), cycleStart.getUTCDate() + dayOffset)));
+                        }
+                    }
+                } else {
+                    candidates.push(new Date(Date.UTC(y, m, d + periods * interval)));
+                }
             }
 
             // 选出严格大于 baseObj (上次执行点) 的候选日
